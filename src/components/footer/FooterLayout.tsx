@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Footer from '@/ui/footer/Footer';
+import Footer from '@/components/footer/Footer';
 import { usePathname } from 'next/navigation';
 
 export default function FooterLayout() {
