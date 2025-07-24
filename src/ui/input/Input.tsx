@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 import Styles from './Input.module.css';
-import Button from '@/ui/Button';
+import Button from '@/ui/button/Button'; // Adjust the import path as necessary
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ChevronDown } from 'lucide-react';
