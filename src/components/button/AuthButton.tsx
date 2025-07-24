@@ -69,7 +69,7 @@ export default function AuthButton() {
     return (
         <Button
         onClick={handleClick}
-        variant="primary"
+        variant="outlined"
         label={buttonLabel}
         showIcon
         />

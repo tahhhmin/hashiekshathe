@@ -38,3 +38,12 @@
 .sheetMenuContainer {
     display: none;
 }
+@media (max-width: 768px) {
+    .navigationMenuContainer, 
+    .themeToggleButton, .authButton {
+        display: none;
+    }
+    .sheetMenuContainer {
+        display: block;
+    }
+}

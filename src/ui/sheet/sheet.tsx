@@ -3,9 +3,10 @@ import Styles from './sheet.module.css';
 import Button from '@/ui/button/Button';
 import { X } from 'lucide-react';
 import ThemeToggleButton from '@/components/button/ThemeToggleButton';
+import AuthButton from '@/components/button/AuthButton';
+import Link from 'next/link';
 
 interface SheetProps {
-    buttonIcon: React.ElementType;
     menuName?: string;
     footer?: boolean;
     items?: SheetItem[];
@@ -56,20 +57,15 @@ export default function Sheet({
 
             {footer && (
             <div className={Styles.footer}>
-                <Button
+                <Link href="/donate" className={Styles.footerButton1}><Button
                 variant="primary"
                 label="Donate"
-                onClick={() => console.log('button clicked')}
-                />
+                /></Link>
                 <div className={Styles.footerButton}>
-                <div className={Styles.footerButton1}>
-                    <Button
-                    variant="outlined"
-                    label="Login / Register"
-                    onClick={() => console.log('button clicked')}
-                    />
-                </div>
-                <ThemeToggleButton />
+                    <div className={Styles.footerButton1}>
+                        <AuthButton />
+                    </div>
+                    <ThemeToggleButton />
                 </div>
             </div>
             )}

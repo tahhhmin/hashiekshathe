@@ -10,6 +10,7 @@ import Button from '@/ui/button/Button'
 import ThemeToggleButton from '@/components/button/ThemeToggleButton';
 import AuthButton from '../button/AuthButton'
 import NavigationMenu, { NavItem } from '@/ui/navigationMenu/NavigationMenu'
+import Sheet from '@/ui/sheet/sheet'
 
 const navItems: NavItem[] = [
     { name: 'Home', path: '/' },
@@ -102,11 +103,11 @@ export default function Header() {
                     label='Donate'
                 /></Link>
 
-                <AuthButton />
-                <ThemeToggleButton />
+                <div className={Styles.authButton}><AuthButton /></div>
+                <div className={Styles.themeToggleButton}><ThemeToggleButton /></div>
 
                 <div className={Styles.sheetMenuContainer}>
-
+                    <Sheet menuName="Menu" footer items={navItems} />
                 </div>
             </div>
         </header>
