@@ -47,14 +47,6 @@ export default function Sheet({
             />
             </div>
 
-            <div className={Styles.container}>
-            {items.map((item, index) => (
-                <a key={index} href={item.path} className={Styles.item}>
-                {item.name}
-                </a>
-            ))}
-            </div>
-
             {footer && (
             <div className={Styles.footer}>
                 <Link href="/donate" className={Styles.footerButton1}><Button
@@ -69,6 +61,16 @@ export default function Sheet({
                 </div>
             </div>
             )}
+
+            <div className={Styles.container}>
+            {items.map((item, index) => (
+                <a key={index} href={item.path} className={Styles.item}>
+                {item.name}
+                </a>
+            ))}
+            </div>
+
+            
         </div>
         </div>
     );
