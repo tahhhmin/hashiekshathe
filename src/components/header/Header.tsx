@@ -17,16 +17,7 @@ const navItems: NavItem[] = [
     {
         name: 'About',
         path: '/about',
-        hasDropdown: true,
-        dropdownItems: [
-        { name: 'Introduction', path: '/about/introduction', description: 'Get to know who we are and what drives our mission.' },
-        { name: 'Founding Story', path: '/about/founding', description: 'Discover how our journey began and the values we’re built on.' },
-        { name: 'Mission & Vision', path: '/about/mission-vision', description: 'Learn about our core purpose and the future we’re working toward.' },
-        { name: 'Our Initiatives', path: '/about/initiatives', description: 'Understand the key focus areas that guide our work.' },
-        { name: 'Get Involved', path: '/about/get-involved', description: 'Find out how you can contribute, volunteer, or support us.' },
-        { name: 'Our Leadership', path: '/about/leadership', description: 'Meet the people guiding our vision and impact.' },
-        { name: 'Our Collaborators', path: '/about/collaborators', description: 'Explore the partnerships that strengthen our mission.' },
-        ],
+        hasDropdown: false,
     },
     {
         name: 'Records',

@@ -1,9 +1,9 @@
-import Styles from "./page.module.css"
+import HeroSection from "@/components/home-page/HeroSection"
 
 export default function Home() {
     return (
         <section className='section'>
-            <div className={Styles.container}></div>
+            <HeroSection />
         </section>
     )
 }

@@ -27,6 +27,7 @@ export default function page() {
     subtitle="A Story of Urgency and Unity"
     text={[
       `Hashi Ekshathe began during a time of hardship, when a group of students noticed how many families around them were struggling to access basic needs. With no formal structure, just the will to help, they began distributing food, water, and warm clothing to affected communities.`,
+      `Hashi Ekshathe began during a time of hardship, when a group of students noticed how many families around them were struggling to access basic needs. With no formal structure, just the will to help, they began distributing food, water, and warm clothing to affected communities.`,
       `What started as scattered acts of kindness grew into an organized effort to reach more people, more efficiently, and with greater impact. Our founding spirit was rooted in youth solidarity, and even today, that same spirit fuels every step we take. We are proud of our student-led legacy and remain grounded in the belief that young people are capable of extraordinary things.`
     ]}
     button1={{ label: 'Show More', variant: 'primary' }}

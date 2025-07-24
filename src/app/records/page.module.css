@@ -1,0 +1,51 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+
+.card {
+    background-color: var(--color-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow: hidden;
+}
+.cardHeader {
+    display: flex;
+    flex-direction: column;
+}
+.title {
+    display: flex;
+    gap: 0.5rem;
+}
+.icon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-orange);
+    margin: auto 0;
+}
+.cardContent {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.cardfooter {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 768px) {
+    .container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+
+
