@@ -53,7 +53,7 @@ const navItems: NavItem[] = [
         path: '/volunteer',
         hasDropdown: true,
         dropdownItems: [
-        { name: 'Registration', path: '/volunteer/registration', description: 'Sign up to be a part of our growing volunteer community.' },
+        { name: 'Register', path: '/volunteer/register', description: 'Sign up to be a part of our growing volunteer community.' },
         { name: 'Benefits', path: '/volunteer/benefits', description: 'Discover how volunteering with us helps you grow too.' },
         ],
     },

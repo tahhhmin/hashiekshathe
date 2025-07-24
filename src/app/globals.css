@@ -55,7 +55,7 @@ body {
 }
 h1 {
     font-family: var(--font-family);
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 600;
     color: var(--color-text);
 }
@@ -109,4 +109,16 @@ label {
 }
 .muted-text {
     color: var(--color-muted);
+}
+
+.section {
+    margin: 6rem auto 0 auto;
+    width: 1440px;
+    padding: 0 2rem;
+}
+@media (max-width: 1440px) {
+    .section {
+        width: 100%;
+        padding: 0 1rem;
+    }
 }
