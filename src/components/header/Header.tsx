@@ -8,9 +8,9 @@ import Logo from '../../../public/logo-orange.svg'
 
 import Button from '@/ui/button/Button'
 import ThemeToggleButton from '@/components/button/ThemeToggleButton';
-import AuthButton from '../button/AuthButton'
 import NavigationMenu, { NavItem } from '@/ui/navigationMenu/NavigationMenu'
 import Sheet from '@/ui/sheet/sheet'
+import AuthButton from '../button/AuthButton'
 
 const navItems: NavItem[] = [
     { name: 'Home', path: '/' },
@@ -103,7 +103,10 @@ export default function Header() {
                     label='Donate'
                 /></Link>
 
-                <div className={Styles.authButton}><AuthButton /></div>
+                <div className={Styles.authButton}>
+                    <AuthButton />
+                
+                </div>
                 <div className={Styles.themeToggleButton}><ThemeToggleButton /></div>
 
                 <div className={Styles.sheetMenuContainer}>
