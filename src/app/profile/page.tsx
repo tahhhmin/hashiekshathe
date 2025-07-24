@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface UserData {
     firstName: string;
@@ -18,6 +19,7 @@ export default function UserProfilePage() {
     const router = useRouter();
     const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true); // Start in loading state
+    const [avatarError, setAvatarError] = useState(false);
     // No 'error' state for display, as we'll redirect immediately on error
 
     useEffect(() => {
@@ -61,28 +63,44 @@ export default function UserProfilePage() {
         );
     }
 
+    // Generate fallback initials
+    const firstNameInitial = userData.firstName ? userData.firstName.charAt(0).toUpperCase() : '';
+    const lastNameInitial = userData.lastName ? userData.lastName.charAt(0).toUpperCase() : '';
+    const fallbackUrl = `https://placehold.co/96x96/cccccc/333333?text=${firstNameInitial}${lastNameInitial}`;
+
     // Only render profile content if user data is successfully loaded and not in loading state
     return (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">
             <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-md text-center">
                 <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Profile</h2>
 
-                {userData.avatar ? (
-                    <img
-                        src={userData.avatar}
-                        alt="User Avatar"
-                        className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-blue-500 shadow-md"
-                        onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            const firstNameInitial = userData.firstName ? userData.firstName.charAt(0).toUpperCase() : '';
-                            const lastNameInitial = userData.lastName ? userData.lastName.charAt(0).toUpperCase() : '';
-                            e.currentTarget.src = `https://placehold.co/96x96/cccccc/333333?text=${firstNameInitial}${lastNameInitial}`;
-                        }}
-                    />
+                {userData.avatar && !avatarError ? (
+                    <div className="relative w-24 h-24 mx-auto mb-4">
+                        <Image
+                            src={userData.avatar}
+                            alt="User Avatar"
+                            width={96}
+                            height={96}
+                            className="rounded-full object-cover border-4 border-blue-500 shadow-md"
+                            onError={() => setAvatarError(true)}
+                            priority
+                        />
+                    </div>
+                ) : userData.avatar && avatarError ? (
+                    <div className="relative w-24 h-24 mx-auto mb-4">
+                        <Image
+                            src={fallbackUrl}
+                            alt="User Avatar Fallback"
+                            width={96}
+                            height={96}
+                            className="rounded-full object-cover border-4 border-blue-500 shadow-md"
+                            priority
+                        />
+                    </div>
                 ) : (
                     <div className="w-24 h-24 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-5xl font-bold mx-auto mb-4 border-4 border-blue-500 shadow-md">
-                        {userData.firstName ? userData.firstName.charAt(0).toUpperCase() : ''}
-                        {userData.lastName ? userData.lastName.charAt(0).toUpperCase() : ''}
+                        {firstNameInitial}
+                        {lastNameInitial}
                     </div>
                 )}
 

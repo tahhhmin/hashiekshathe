@@ -5,6 +5,32 @@ import User from "@/models/User"; // Adjust path as needed
 import { getDataFromToken } from "@/utils/getDataFromToken"; // Adjust path as needed
 import bcryptjs from "bcryptjs";
 
+interface UpdateData {
+    firstName?: string;
+    lastName?: string;
+    middleName?: string;
+    username?: string;
+    email?: string;
+    password?: string;
+    phoneNumber?: string;
+    dateOfBirth?: Date;
+    gender?: string;
+    avatar?: string;
+    institution?: string;
+    educationLevel?: string;
+    address?: string;
+    location?: string;
+    teamName?: string;
+    teamRole?: string;
+    isDeptMember?: boolean;
+    department?: string;
+}
+
+interface ValidationError extends Error {
+    name: 'ValidationError';
+    errors: Record<string, { message: string }>;
+}
+
 /**
  * Handles user profile updates. Requires authentication.
  * Allows updating most user fields, handles password hashing if password is provided.
@@ -53,7 +79,7 @@ export async function PUT(request: NextRequest) {
         }
 
         // Prepare update object, handling specific fields
-        const updateData: { [key: string]: any } = {};
+        const updateData: UpdateData = {};
 
         if (firstName !== undefined) updateData.firstName = firstName;
         if (lastName !== undefined) updateData.lastName = lastName;
@@ -123,9 +149,10 @@ export async function PUT(request: NextRequest) {
             console.error("Error during user update:", error.message);
             // Handle Mongoose validation errors specifically
             if (error.name === 'ValidationError') {
-                const errors: { [key: string]: string } = {};
-                for (let field in (error as any).errors) {
-                    errors[field] = (error as any).errors[field].message;
+                const validationError = error as ValidationError;
+                const errors: Record<string, string> = {};
+                for (const field in validationError.errors) {
+                    errors[field] = validationError.errors[field].message;
                 }
                 return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 });
             }

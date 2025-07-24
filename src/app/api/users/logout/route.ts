@@ -1,12 +1,11 @@
 // app/api/users/logout/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 /**
  * Handles user logout by clearing the authentication token cookie.
- * @param request The NextRequest object.
  * @returns A NextResponse object indicating successful logout.
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const response = NextResponse.json({
             message: "Logout successful",

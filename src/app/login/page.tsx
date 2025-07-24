@@ -196,7 +196,7 @@ export default function CombinedLoginPage() {
                                 />
                             </div>
                             <p className="mt-4 text-center text-gray-600 text-sm">
-                                Didn't receive the code? Try logging in again to resend.
+                                Didn&apos;t receive the code? Try logging in again to resend.
                             </p>
                         </>
                     )}
@@ -214,7 +214,7 @@ export default function CombinedLoginPage() {
 
                 {currentStep === 'login' && (
                     <p className="mt-4 text-center text-gray-600">
-                        Don't have an account?{' '}
+                        Don&apos;t have an account?{' '}
                         <button
                             onClick={() => router.push('/login-signup')} // Adjust this path if your signup is separate
                             className="text-blue-600 hover:underline font-medium"
