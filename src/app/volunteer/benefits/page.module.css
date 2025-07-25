@@ -51,3 +51,28 @@
 }
 
 
+
+
+
+.bentoContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.bentoContainerIconContainer {
+    display: flex;
+    justify-content: center;
+}
+.bentoContainerIcon {
+    width: 100px;
+    height: 100px;
+    color: var(--color-orange);
+}
+.bentoContainertitle {
+    text-align: center;
+}
+.bentoContainerButtonContainer {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
