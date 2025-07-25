@@ -1,6 +1,6 @@
 import React from 'react'
 import Styles from './page.module.css'
-import { Handshake, Mail, UserSearch, Zap } from 'lucide-react'
+import { Handshake, Mail, Zap } from 'lucide-react'
 import Button from '@/ui/button/Button'
 import Storycard from '@/ui/card/Storycard'
 
