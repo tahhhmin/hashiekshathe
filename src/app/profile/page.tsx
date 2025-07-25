@@ -4,6 +4,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import styles from './page.module.css';
+import { Calendar, MapPin } from 'lucide-react';
+import Button from '@/ui/button/Button';
 
 interface UserData {
     firstName: string;
@@ -12,15 +15,35 @@ interface UserData {
     username: string;
     email: string;
     avatar?: string;
-    // Add other fields you want to display
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    institution?: string;
+    educationLevel?: string;
+    address?: string;
+    location?: string;
+    teamName?: string;
+    teamRole?: string;
+    isDeptMember?: boolean;
+    department?: string;
+    dateJoined?: string;
+}
+
+interface FormErrors {
+    [key: string]: string;
 }
 
 export default function UserProfilePage() {
     const router = useRouter();
     const [userData, setUserData] = useState<UserData | null>(null);
-    const [loading, setLoading] = useState(true); // Start in loading state
+    const [editData, setEditData] = useState<UserData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
     const [avatarError, setAvatarError] = useState(false);
-    // No 'error' state for display, as we'll redirect immediately on error
+    const [isEditing, setIsEditing] = useState(false);
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [successMessage, setSuccessMessage] = useState('');
+    const [activeTab, setActiveTab] = useState<'overview' | 'personal' | 'academic' | 'settings'>('overview');
 
     useEffect(() => {
         async function fetchUserProfile() {
@@ -30,100 +53,586 @@ export default function UserProfilePage() {
 
                 if (response.ok && data.success) {
                     setUserData(data.data);
+                    setEditData(data.data);
                 } else {
-                    // If API returns an error, it means the token was invalid, user not found, etc.
-                    // Immediately redirect to login.
                     console.warn(`Client-side: API denied access to /user/profile (Status: ${response.status}). Redirecting.`);
-                    router.replace('/login'); // Use replace to prevent going back to profile page
-                    return; // Stop further execution
+                    router.replace('/login');
+                    return;
                 }
             } catch (err) {
-                // Catch network errors or other unexpected errors
                 console.error('Client-side: Network or unexpected error fetching user profile:', err);
-                router.replace('/login'); // Redirect to login
-                return; // Stop further execution
+                router.replace('/login');
+                return;
             } finally {
-                setLoading(false); // End loading regardless of success or failure
+                setLoading(false);
             }
         }
         fetchUserProfile();
     }, [router]);
 
-    // If still loading OR if no user data is found (meaning redirect is pending or failed),
-    // render nothing or a minimal loading indicator.
-    // The middleware should handle unauthorized access before this component even loads.
-    // This acts as a client-side fallback.
+    const validateForm = (): boolean => {
+        const newErrors: FormErrors = {};
+
+        if (!editData?.firstName?.trim()) {
+            newErrors.firstName = 'First name is required';
+        }
+
+        if (!editData?.lastName?.trim()) {
+            newErrors.lastName = 'Last name is required';
+        }
+
+        if (!editData?.username?.trim()) {
+            newErrors.username = 'Username is required';
+        } else if (editData.username.length < 3) {
+            newErrors.username = 'Username must be at least 3 characters';
+        }
+
+        if (!editData?.email?.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+
+        if (editData?.phoneNumber && !/^\+?[0-9\s\-]{7,15}$/.test(editData.phoneNumber)) {
+            newErrors.phoneNumber = 'Please enter a valid phone number';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleInputChange = (field: keyof UserData, value: string | boolean) => {
+        if (!editData) return;
+
+        setEditData({
+            ...editData,
+            [field]: value
+        });
+
+        // Clear error for this field when user starts typing
+        if (errors[field]) {
+            setErrors({
+                ...errors,
+                [field]: ''
+            });
+        }
+    };
+
+    const handleSave = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        setUpdating(true);
+        setErrors({});
+
+        try {
+            const response = await fetch('/api/users/update-user', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(editData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setUserData(data.user);
+                setEditData(data.user);
+                setIsEditing(false);
+                setSuccessMessage('Profile updated successfully!');
+                setTimeout(() => setSuccessMessage(''), 3000);
+            } else {
+                if (data.details) {
+                    setErrors(data.details);
+                } else {
+                    setErrors({ general: data.error || 'Failed to update profile' });
+                }
+            }
+        } catch (err) {
+            console.error('Error updating profile:', err);
+            setErrors({ general: 'Network error. Please try again.' });
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setEditData(userData);
+        setIsEditing(false);
+        setErrors({});
+    };
+
+    const handleLogout = async () => {
+        await fetch('/api/users/logout', { method: 'GET' });
+        router.replace('/login');
+    };
+
     if (loading || !userData) {
         return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center font-inter">
-                {/* You can show a very brief loading spinner here if desired,
-                    but for immediate redirect, often nothing is preferred. */}
-                <p className="text-gray-700 text-lg">Loading...</p>
+            <div className={styles.loadingContainer}>
+                <div className={styles.spinner}></div>
+                <p>Loading your profile...</p>
             </div>
         );
     }
 
-    // Generate fallback initials
     const firstNameInitial = userData.firstName ? userData.firstName.charAt(0).toUpperCase() : '';
     const lastNameInitial = userData.lastName ? userData.lastName.charAt(0).toUpperCase() : '';
-    const fallbackUrl = `https://placehold.co/96x96/cccccc/333333?text=${firstNameInitial}${lastNameInitial}`;
+    const fallbackUrl = `https://placehold.co/120x120/cccccc/333333?text=${firstNameInitial}${lastNameInitial}`;
 
-    // Only render profile content if user data is successfully loaded and not in loading state
     return (
         <section className='section'>
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">
-                <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Profile</h2>
+            <div className={styles.container}>
 
-                    {userData.avatar && !avatarError ? (
-                        <div className="relative w-24 h-24 mx-auto mb-4">
-                            <Image
-                                src={userData.avatar}
-                                alt="User Avatar"
-                                width={96}
-                                height={96}
-                                className="rounded-full object-cover border-4 border-blue-500 shadow-md"
-                                onError={() => setAvatarError(true)}
-                                priority
+                <div className={styles.header}>
+                    <div className={styles.avatarContainer}>
+                        {userData.avatar && !avatarError ? (
+                            <div className={styles.avatar}>
+                                <Image
+                                    src={userData.avatar}
+                                    alt="User Avatar"
+                                    className={styles.avatar}
+                                    onError={() => setAvatarError(true)}
+                                    priority
+                                />
+                            </div>
+
+
+                        ) : userData.avatar && avatarError ? (
+                            <div className={styles.avatar}>
+                                <Image
+                                    src={fallbackUrl}
+                                    alt="User Avatar Fallback"
+                                    className={styles.avatar}
+                                    priority
+                                />
+                            </div>
+                        ) : (
+                            <div className={styles.avatar}>
+                                {firstNameInitial}{lastNameInitial}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={styles.profileIdentityContainer}>
+                        <div className={styles.nameContainer}>
+                            <h1 className={styles.name}>{userData.firstName} {userData.middleName} {userData.lastName}</h1>
+                            <p className={styles.username}>@{userData.username}</p>
+                        </div>
+                        <p>
+                            Lorem ipsum dolor, sit amet consectetur 
+                            adipisicing elit. Aut sapiente autem quam 
+                            id expedita distinctio illum qui. 
+                            Inventore porro quos quasi. Totam, 
+                            reprehenderit cum. Deleniti ducimus 
+                            officiis amet id asperiores.
+                        </p>
+
+                        <div className={styles.headerInfoContainer}>
+                            <div className={styles.infoItem}>
+                                <MapPin /> {userData.address}
+                            </div>
+
+                            <div className={styles.infoItem}>
+                                <Calendar /> {userData.dateJoined}
+                            </div>
+
+                            <div className={styles.infoItem}>
+                                <MapPin /> {userData.address}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div className={styles.navbar}>
+
+                    <button
+                        onClick={() => setActiveTab('overview')}
+                        className={`${styles.tab} ${activeTab === 'overview' ? styles.activeTab : ''}`}
+                    >
+                        Overview
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('personal')}
+                        className={`${styles.tab} ${activeTab === 'personal' ? styles.activeTab : ''}`}
+                    >
+                        Personal Info
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('academic')}
+                        className={`${styles.tab} ${activeTab === 'academic' ? styles.activeTab : ''}`}
+                    >
+                        Academic
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('settings')}
+                        className={`${styles.tab} ${activeTab === 'settings' ? styles.activeTab : ''}`}
+                    >
+                        Settings
+                    </button>
+
+                </div>
+
+                {activeTab === 'overview' && (
+                    <div className={styles.containerOverview}>
+
+
+                    </div>
+                )}
+
+
+
+
+
+
+
+                    <div className={styles.profileCard}>
+
+
+                        {/* Success Message */}
+                        {successMessage && (
+                            <div className={styles.successMessage}>
+                                {successMessage}
+                            </div>
+                        )}
+
+                        {/* General Error */}
+                        {errors.general && (
+                            <div className={styles.errorMessage}>
+                                {errors.general}
+                            </div>
+                        )}
+
+
+                    {/* Tabs */}
+
+
+                    {/* Form Content */}
+                    <div className={styles.formContent}>
+                        {activeTab === 'personal' && (
+
+
+
+                            <div className={styles.formSection}>
+
+                <div className=''>
+                    {!isEditing ? (
+                            <Button
+                                variant='outlined'
+                                icon='Pencil'
+                                showIcon
+                                onClick={() => setIsEditing(true)}
+                                label="Edit Profile"
+                                
                             />
-                        </div>
-                    ) : userData.avatar && avatarError ? (
-                        <div className="relative w-24 h-24 mx-auto mb-4">
-                            <Image
-                                src={fallbackUrl}
-                                alt="User Avatar Fallback"
-                                width={96}
-                                height={96}
-                                className="rounded-full object-cover border-4 border-blue-500 shadow-md"
-                                priority
-                            />
-                        </div>
-                    ) : (
-                        <div className="w-24 h-24 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-5xl font-bold mx-auto mb-4 border-4 border-blue-500 shadow-md">
-                            {firstNameInitial}
-                            {lastNameInitial}
-                        </div>
-                    )}
+                        ) : (
+                            <div className={styles.editActions}>
+                                <Button
+                                    variant='outlined'
+                                    onClick={handleSave}
+                                    disabled={updating}
+                                    showIcon
+                                    icon='Save'
+                                    label={updating ? 'Saving...' : 'Save'}
+                                />
+                                <Button
+                                    onClick={handleCancel}
+                                    disabled={updating}
+                                    variant='danger'
+                                    label='Cancel'
+                                />
+                            </div>
+                        )}
+                </div>
 
-                    <p className="text-2xl font-semibold text-gray-800 mb-2">
-                        {userData.firstName} {userData.middleName} {userData.lastName}
-                    </p>
-                    <p className="text-gray-600 mb-1">@{userData.username}</p>
-                    <p className="text-gray-600">{userData.email}</p>
+                                <div className={styles.formGrid}>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>First Name *</label>
+                                        {isEditing ? (
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={editData?.firstName || ''}
+                                                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                                                    className={`${styles.input} ${errors.firstName ? styles.inputError : ''}`}
+                                                />
+                                                {errors.firstName && <span className={styles.errorText}>{errors.firstName}</span>}
+                                            </>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.firstName}</div>
+                                        )}
+                                    </div>
 
-                    <div className="mt-6">
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Last Name *</label>
+                                        {isEditing ? (
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={editData?.lastName || ''}
+                                                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                                                    className={`${styles.input} ${errors.lastName ? styles.inputError : ''}`}
+                                                />
+                                                {errors.lastName && <span className={styles.errorText}>{errors.lastName}</span>}
+                                            </>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.lastName}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Middle Name</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData?.middleName || ''}
+                                                onChange={(e) => handleInputChange('middleName', e.target.value)}
+                                                className={styles.input}
+                                            />
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.middleName || 'Not specified'}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Username *</label>
+                                        {isEditing ? (
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={editData?.username || ''}
+                                                    onChange={(e) => handleInputChange('username', e.target.value)}
+                                                    className={`${styles.input} ${errors.username ? styles.inputError : ''}`}
+                                                />
+                                                {errors.username && <span className={styles.errorText}>{errors.username}</span>}
+                                            </>
+                                        ) : (
+                                            <div className={styles.displayValue}>@{userData.username}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Email *</label>
+                                        {isEditing ? (
+                                            <>
+                                                <input
+                                                    type="email"
+                                                    value={editData?.email || ''}
+                                                    onChange={(e) => handleInputChange('email', e.target.value)}
+                                                    className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                                                />
+                                                {errors.email && <span className={styles.errorText}>{errors.email}</span>}
+                                            </>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.email}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Phone Number</label>
+                                        {isEditing ? (
+                                            <>
+                                                <input
+                                                    type="tel"
+                                                    value={editData?.phoneNumber || ''}
+                                                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                                                    className={`${styles.input} ${errors.phoneNumber ? styles.inputError : ''}`}
+                                                    placeholder="+1234567890"
+                                                />
+                                                {errors.phoneNumber && <span className={styles.errorText}>{errors.phoneNumber}</span>}
+                                            </>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.phoneNumber || 'Not specified'}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Date of Birth</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="date"
+                                                value={editData?.dateOfBirth ? new Date(editData.dateOfBirth).toISOString().split('T')[0] : ''}
+                                                onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                                                className={styles.input}
+                                            />
+                                        ) : (
+                                            <div className={styles.displayValue}>
+                                                {userData.dateOfBirth ? new Date(userData.dateOfBirth).toLocaleDateString() : 'Not specified'}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Gender</label>
+                                        {isEditing ? (
+                                            <select
+                                                value={editData?.gender || ''}
+                                                onChange={(e) => handleInputChange('gender', e.target.value)}
+                                                className={styles.select}
+                                            >
+                                                <option value="">Select Gender</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                                <option value="other">Other</option>
+                                                <option value="prefer-not-to-say">Prefer not to say</option>
+                                            </select>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.gender || 'Not specified'}</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Address</label>
+                                    {isEditing ? (
+                                        <textarea
+                                            value={editData?.address || ''}
+                                            onChange={(e) => handleInputChange('address', e.target.value)}
+                                            className={styles.textarea}
+                                            rows={3}
+                                        />
+                                    ) : (
+                                        <div className={styles.displayValue}>{userData.address || 'Not specified'}</div>
+                                    )}
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Location</label>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={editData?.location || ''}
+                                            onChange={(e) => handleInputChange('location', e.target.value)}
+                                            className={styles.input}
+                                            placeholder="City, Country"
+                                        />
+                                    ) : (
+                                        <div className={styles.displayValue}>{userData.location || 'Not specified'}</div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'academic' && (
+                            <div className={styles.formSection}>
+                                <div className={styles.formGrid}>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Institution</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData?.institution || ''}
+                                                onChange={(e) => handleInputChange('institution', e.target.value)}
+                                                className={styles.input}
+                                            />
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.institution || 'Not specified'}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Education Level</label>
+                                        {isEditing ? (
+                                            <select
+                                                value={editData?.educationLevel || ''}
+                                                onChange={(e) => handleInputChange('educationLevel', e.target.value)}
+                                                className={styles.select}
+                                            >
+                                                <option value="">Select Education Level</option>
+                                                <option value="high-school">High School</option>
+                                                <option value="bachelors">Bachelor's Degree</option>
+                                                <option value="masters">Master's Degree</option>
+                                                <option value="phd">PhD</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.educationLevel || 'Not specified'}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Department</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData?.department || ''}
+                                                onChange={(e) => handleInputChange('department', e.target.value)}
+                                                className={styles.input}
+                                            />
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.department || 'Not specified'}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.checkboxLabel}>
+                                            {isEditing ? (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editData?.isDeptMember || false}
+                                                    onChange={(e) => handleInputChange('isDeptMember', e.target.checked)}
+                                                    className={styles.checkbox}
+                                                />
+                                            ) : null}
+                                            <span className={styles.checkboxText}>
+                                                {isEditing ? 'Department Member' : `Department Member: ${userData.isDeptMember ? 'Yes' : 'No'}`}
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'settings' && (
+                            <div className={styles.formSection}>
+                                <div className={styles.formGrid}>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Team Name</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData?.teamName || ''}
+                                                onChange={(e) => handleInputChange('teamName', e.target.value)}
+                                                className={styles.input}
+                                            />
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.teamName || 'Not specified'}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Team Role</label>
+                                        {isEditing ? (
+                                            <select
+                                                value={editData?.teamRole || ''}
+                                                onChange={(e) => handleInputChange('teamRole', e.target.value)}
+                                                className={styles.select}
+                                            >
+                                                <option value="">Select Role</option>
+                                                <option value="leader">Team Leader</option>
+                                                <option value="member">Team Member</option>
+                                                <option value="coordinator">Coordinator</option>
+                                                <option value="advisor">Advisor</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.teamRole || 'Not specified'}</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className={styles.actions}>
                         <button
-                            onClick={() => router.push('/dashboard')} // Example: Go to dashboard
-                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors duration-200 mr-2"
-                        >
-                            Go to Dashboard
-                        </button>
-                        <button
-                            onClick={async () => {
-                                await fetch('/api/users/logout', { method: 'GET' });
-                                router.replace('/login'); // Redirect to login after logout
-                            }}
-                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-200"
+                            onClick={handleLogout}
+                            className={`${styles.button} ${styles.logoutButton}`}
                         >
                             Logout
                         </button>
