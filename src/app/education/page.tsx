@@ -1,7 +1,7 @@
 import React from 'react'
 import Styles from './page.module.css'
 
-import { Book, Users } from 'lucide-react'
+import { Book } from 'lucide-react'
 import Button from '@/ui/button/Button'
 
 export default function page() {

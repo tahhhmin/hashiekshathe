@@ -1,6 +1,3 @@
-// 2. Enhanced API Route - Submit (with better error handling)
-// pages/api/contact/inquiry/submit.js
-
 import { NextRequest, NextResponse } from "next/server";
 import InquiryMessage from '@/models/InquiryMessage';
 import { sendEmail } from '@/utils/sendMail';
@@ -21,7 +18,7 @@ export async function POST(request: NextRequest) {
         // Validate required fields
         if (!email || !subject || !message) {
             return NextResponse.json(
-                { success: false, message: 'Email, subject, and message are required.' }, 
+                { success: false, message: 'Email, subject, and message are required.' },
                 { status: 400 }
             );
         }
@@ -30,22 +27,22 @@ export async function POST(request: NextRequest) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return NextResponse.json(
-                { success: false, message: 'Please provide a valid email address.' }, 
+                { success: false, message: 'Please provide a valid email address.' },
                 { status: 400 }
             );
         }
 
-        // Validate message length
+        // Validate subject and message length
         if (subject.length > 200) {
             return NextResponse.json(
-                { success: false, message: 'Subject cannot be more than 200 characters.' }, 
+                { success: false, message: 'Subject cannot be more than 200 characters.' },
                 { status: 400 }
             );
         }
 
         if (message.length > 2000) {
             return NextResponse.json(
-                { success: false, message: 'Message cannot be more than 2000 characters.' }, 
+                { success: false, message: 'Message cannot be more than 2000 characters.' },
                 { status: 400 }
             );
         }
@@ -87,7 +84,7 @@ export async function POST(request: NextRequest) {
             }
             console.error('Email sending failed:', emailError);
             return NextResponse.json(
-                { success: false, message: 'Failed to send verification email. Please check your email address and try again.' }, 
+                { success: false, message: 'Failed to send verification email. Please check your email address and try again.' },
                 { status: 503 }
             );
         }
@@ -95,23 +92,33 @@ export async function POST(request: NextRequest) {
         console.log(`[SERVER] Sent verification code ${verifyToken} to ${email}`);
 
         return NextResponse.json(
-            { success: true, message: 'Verification code sent successfully. Please check your email.' }, 
+            { success: true, message: 'Verification code sent successfully. Please check your email.' },
             { status: 200 }
         );
 
     } catch (error: unknown) {
         console.error('Error in submit endpoint:', error);
-        
-        if (error instanceof Error && error.name === 'ValidationError') {
-            const validationError = error as any; // Type assertion for Mongoose validation error
+
+        // Handle Mongoose validation errors safely
+        if (
+            error instanceof Error &&
+            error.name === 'ValidationError' &&
+            typeof (error as any).errors === 'object'
+        ) {
+            const validationError = error as Error & {
+                errors: Record<string, { message: string }>;
+            };
+
+            const messages = Object.values(validationError.errors).map((e) => e.message);
+
             return NextResponse.json(
-                { success: false, message: 'Validation error: ' + Object.values(validationError.errors).map((e: any) => e.message).join(', ') }, 
+                { success: false, message: 'Validation error: ' + messages.join(', ') },
                 { status: 400 }
             );
         }
 
         return NextResponse.json(
-            { success: false, message: 'Internal server error. Please try again later.' }, 
+            { success: false, message: 'Internal server error. Please try again later.' },
             { status: 500 }
         );
     }

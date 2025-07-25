@@ -1,8 +1,5 @@
 "use client"
 
-// 1. Enhanced React Component with State Management
-// pages/contact/page.js or components/ContactForm.js
-
 import React, { useState } from 'react'
 import Styles from './page.module.css'
 import { Mail } from 'lucide-react'
@@ -22,7 +19,7 @@ export default function ContactPage() {
     const [showVerification, setShowVerification] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
-    const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+    const [messageType, setMessageType] = useState('');
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -63,7 +60,7 @@ export default function ContactPage() {
                 setMessage(data.message);
                 setMessageType('error');
             }
-        } catch (error) {
+        } catch {
             setMessage('Failed to send verification code. Please try again.');
             setMessageType('error');
         } finally {
@@ -100,19 +97,17 @@ export default function ContactPage() {
             if (data.success) {
                 setMessage(data.message);
                 setMessageType('success');
-                // Reset form
                 setFormData({ email: '', subject: '', message: '' });
                 setVerificationCode('');
                 setShowVerification(false);
             } else {
                 setMessage(data.message);
                 setMessageType('error');
-                // If code expired, hide verification form
                 if (data.message.includes('expired')) {
                     setShowVerification(false);
                 }
             }
-        } catch (error) {
+        } catch {
             setMessage('Failed to verify code. Please try again.');
             setMessageType('error');
         } finally {
@@ -188,7 +183,7 @@ export default function ContactPage() {
                                     onChange={(value: string) => setVerificationCode(value)}
                                 />
                                 <div className={Styles.resendContainer}>
-                                    <span>Didn't receive the code? </span>
+                                    <span>Didn&rsquo;t receive the code? </span>
                                     <button 
                                         type="button" 
                                         className={Styles.resendButton}
@@ -247,5 +242,5 @@ export default function ContactPage() {
                 </div>
             </div>
         </section>
-    )
+    );
 }
