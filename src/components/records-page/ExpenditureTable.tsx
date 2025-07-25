@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
+import './TableStyles.css'
 
 interface DonationRow {
   [key: string]: string;

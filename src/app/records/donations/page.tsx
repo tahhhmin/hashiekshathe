@@ -62,12 +62,12 @@ export default function page() {
                     <div className={Styles.statContainer}>
                         <div className={Styles.statCard}>
                             <p className='muted-text'>Money donated</p>
-                            <h1>$1,213,643</h1>
+                            <h1 className={Styles.statCardTitle}>$1,213,643</h1>
                         </div>
 
                         <div className={Styles.statCard}>
                             <p className='muted-text'>Donations made</p>
-                            <h1>$1,213,643</h1>
+                            <h1 className={Styles.statCardTitle}>$1,213,643</h1>
                         </div>
                     </div>
 
