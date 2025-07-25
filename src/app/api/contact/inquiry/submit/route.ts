@@ -10,12 +10,18 @@ import { generateVerificationToken, getVerificationTokenExpiry } from "@/utils/g
 function isMongooseValidationError(
   error: unknown
 ): error is Error & { errors: Record<string, { message: string }> } {
+  // Check if it's an Error instance with the name 'ValidationError'
+  if (!(error instanceof Error) || error.name !== "ValidationError") {
+    return false;
+  }
+
+  // Check if 'errors' property exists and is an object, and not null
+  // We cast to a type that *might* have 'errors' to safely check its type
+  const potentialErrorWithErrors = error as { errors?: unknown };
   return (
-    error instanceof Error &&
-    error.name === "ValidationError" &&
-    "errors" in error &&
-    typeof (error as any).errors === "object" &&
-    error.errors !== null
+    "errors" in potentialErrorWithErrors &&
+    typeof potentialErrorWithErrors.errors === "object" &&
+    potentialErrorWithErrors.errors !== null
   );
 }
 
@@ -88,6 +94,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (emailError) {
       console.error("Email sending failed:", emailError);
+      // If email sending fails, delete the created inquiry message to prevent orphaned data
       await InquiryMessage.deleteOne({ _id: inquiry._id });
       return NextResponse.json(
         { success: false, message: "Failed to send verification email. Please check your email address and try again." },
@@ -105,6 +112,7 @@ export async function POST(request: NextRequest) {
     console.error("Error in inquiry submit handler:", error);
 
     if (isMongooseValidationError(error)) {
+      // The type guard ensures `error.errors` is now correctly typed
       const messages = Object.values(error.errors).map((e) => e.message);
       return NextResponse.json(
         { success: false, message: "Validation error: " + messages.join(", ") },
