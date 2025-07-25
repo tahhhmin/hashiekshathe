@@ -1,28 +1,28 @@
-// app/login-combined/page.tsx (or wherever you want this component)
-"use client";
+// app/login-combined/page.tsx
+'use client';
 
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Styles from './page.module.css';
+import Button from '@/ui/button/Button';
+import Input from '@/ui/input/Input';
+import VerificationCodeInput from '@/ui/input/VerificationCodeInput';
+import Link from 'next/link';
 
 export default function CombinedLoginPage() {
     const router = useRouter();
 
-    // State to manage form data for both login and verification
     const [formData, setFormData] = useState({
-        identifier: '', // Can be email or username
+        identifier: '', // Email or username
         password: '',
-        loginVerifyToken: '', // For the verification step
+        loginVerifyToken: '', // Code input
     });
 
-    // State to control which part of the form is currently displayed
     const [currentStep, setCurrentStep] = useState<'login' | 'verify'>('login');
-
-    // State for loading, message, and success status
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
 
-    // Handle input changes for all fields
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prevData => ({
@@ -31,7 +31,6 @@ export default function CombinedLoginPage() {
         }));
     };
 
-    // Handle form submission based on the current step
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
@@ -39,79 +38,64 @@ export default function CombinedLoginPage() {
         setIsSuccess(false);
 
         if (currentStep === 'login') {
-            // --- Step 1: Handle initial login (send identifier and password) ---
             const loginPayload = {
                 identifier: formData.identifier,
                 password: formData.password,
             };
-            console.log("DEBUG: Sending login payload:", loginPayload); // Log payload
+
+            console.log('DEBUG: Sending login payload:', loginPayload);
 
             try {
                 const response = await fetch('/api/users/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(loginPayload),
                 });
 
                 const data = await response.json();
-
-                console.log("DEBUG: Login API response:", data);
-                console.log("DEBUG: Login API status:", response.status);
+                console.log('DEBUG: Login API response:', data);
 
                 if (response.ok && data.requiresVerification) {
-                    setMessage(data.message || 'Login successful. A verification code has been sent to your email. Please enter it below.');
+                    setMessage(data.message || 'Login successful. Verification code sent.');
                     setIsSuccess(true);
-                    setCurrentStep('verify'); // Move to the verification step
+                    setCurrentStep('verify');
                 } else {
-                    setMessage(data.error || 'Login failed. Please check your credentials.');
-                    setIsSuccess(false);
+                    setMessage(data.error || 'Login failed. Check credentials.');
                 }
             } catch (error) {
-                console.error('ERROR: During initial login:', error);
-                setMessage('An unexpected error occurred during login. Please try again later.');
-                setIsSuccess(false);
+                console.error('ERROR during login:', error);
+                setMessage('Unexpected login error. Please try again.');
             } finally {
                 setLoading(false);
             }
         } else if (currentStep === 'verify') {
-            // --- Step 2: Handle verification (send identifier and code) ---
             const verifyPayload = {
                 identifier: formData.identifier,
                 loginVerifyToken: formData.loginVerifyToken,
             };
-            console.log("DEBUG: Sending verification payload:", verifyPayload); // Log payload
+
+            console.log('DEBUG: Sending verification payload:', verifyPayload);
 
             try {
                 const response = await fetch('/api/users/login-verify', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(verifyPayload),
                 });
 
                 const data = await response.json();
-
-                console.log("DEBUG: Verify API response:", data);
-                console.log("DEBUG: Verify API status:", response.status);
+                console.log('DEBUG: Verify API response:', data);
 
                 if (response.ok) {
-                    setMessage(data.message || 'Verification successful! You are now logged in.');
+                    setMessage(data.message || 'Verification successful!');
                     setIsSuccess(true);
-                    // Redirect to dashboard or home page upon successful verification
-                    setTimeout(() => {
-                        router.push('/profile'); // Redirect to the new profile page
-                    }, 1500); // Give user a moment to read success message
+                    setTimeout(() => router.push('/profile'), 1500);
                 } else {
-                    setMessage(data.error || 'Verification failed. Please check the code and try again.');
-                    setIsSuccess(false);
+                    setMessage(data.error || 'Verification failed. Check the code.');
                 }
             } catch (error) {
-                console.error('ERROR: During verification:', error);
-                setMessage('An unexpected error occurred during verification. Please try again later.');
-                setIsSuccess(false);
+                console.error('ERROR during verification:', error);
+                setMessage('Unexpected verification error. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -119,111 +103,121 @@ export default function CombinedLoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">
-            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-md">
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-                    {currentStep === 'login' ? 'Login to Your Account' : 'Verify Your Login'}
-                </h2>
-                {currentStep === 'verify' && (
-                    <p className="text-center text-gray-600 mb-4">
-                        A verification code has been sent to your email. Please enter it below to complete your login.
-                    </p>
-                )}
+        <div className={Styles.page}>
+        <form onSubmit={handleSubmit} className={Styles.form}>
 
-                {message && (
-                    <div className={`p-3 mb-4 rounded-lg text-center ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {message}
+            <div className={Styles.formHeader}>
+                    <div><h2 className={Styles.formTitle}>
+                        {currentStep === 'login' ? 'Login' : 'Verify Your Login'}
+
+                    </h2>
+
+                                {currentStep === 'verify' && (
+                            <p>A verification code has been sent to your email. Enter it below.</p>
+                        )}
+
+                        {message && (
+                            <div className={isSuccess ? Styles.successMsg : Styles.errorMsg}>
+                                {message}
+                            </div>
+                        )}
+                        </div>
+                    <div className={Styles.headerButton}>
+                        <Button
+                            variant='icon'
+                            showIcon
+                            icon='X'
+                            onClick={() => router.back()}
+                        />
                     </div>
-                )}
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {currentStep === 'login' && (
-                        <>
-                            <div>
-                                <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">Email or Username <span className="text-red-500">*</span></label>
-                                <input
-                                    type="text"
-                                    id="identifier"
-                                    name="identifier"
-                                    value={formData.identifier}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                        </>
-                    )}
 
-                    {currentStep === 'verify' && (
-                        <>
-                            <div>
-                                <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">Email or Username</label>
-                                <input
-                                    type="text"
-                                    id="identifier"
-                                    name="identifier"
-                                    value={formData.identifier}
-                                    // Disable the identifier input in verification step as it's already provided
-                                    disabled
-                                    className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Your email or username"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="loginVerifyToken" className="block text-sm font-medium text-gray-700 mb-1">Verification Code <span className="text-red-500">*</span></label>
-                                <input
-                                    type="text"
-                                    id="loginVerifyToken"
-                                    name="loginVerifyToken"
-                                    value={formData.loginVerifyToken}
-                                    onChange={handleChange}
-                                    required
-                                    maxLength={6} // Assuming a 6-digit code
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-center text-xl tracking-widest"
-                                    placeholder="______"
-                                />
-                            </div>
-                            <p className="mt-4 text-center text-gray-600 text-sm">
-                                Didn&apos;t receive the code? Try logging in again to resend.
-                            </p>
-                        </>
-                    )}
 
-                    <div className="mt-6">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold shadow-md"
-                        >
-                            {loading ? (currentStep === 'login' ? 'Logging In...' : 'Verifying...') : (currentStep === 'login' ? 'Login' : 'Verify Code')}
-                        </button>
-                    </div>
-                </form>
 
-                {currentStep === 'login' && (
-                    <p className="mt-4 text-center text-gray-600">
-                        Don&apos;t have an account?{' '}
-                        <button
-                            onClick={() => router.push('/login-signup')} // Adjust this path if your signup is separate
-                            className="text-blue-600 hover:underline font-medium"
-                        >
-                            Sign Up
-                        </button>
-                    </p>
-                )}
+
+
+            {currentStep === 'login' && (
+                <div className={Styles.inputGroup}>
+                    <Input
+                        label="Email or Username"
+                        showIcon
+                        icon="User"
+                        type="text"
+                        placeholder="example@gmail.com"
+                        name="identifier"
+                        value={formData.identifier}
+                        onChange={handleChange}
+                    />
+
+                    <Input
+                        label="Password"
+                        showIcon
+                        icon="Lock"
+                        type="password"
+                        placeholder="Enter password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                    />
+                </div>
+            )}
+
+            {currentStep === 'verify' && (
+                <>
+                    <Input
+                        label="Identifier"
+                        type="text"
+                        name="identifier"
+                        value={formData.identifier}
+                        disabled
+                        showIcon
+                        icon="User"
+                    />
+
+                    <VerificationCodeInput
+                        label="Verification Code *"
+                        value={formData.loginVerifyToken}
+                        onChange={(value) => {
+                            setFormData(prev => ({
+                                ...prev,
+                                loginVerifyToken: value,
+                            }));
+                        }}
+                        length={6}
+                        autoFocus={true}
+                        helpText="Enter the 6-digit verification code"
+                    />
+
+                    <p>Didn&apos;t get the code? Try logging in again to resend.</p>
+                </>
+            )}
+
+            <div className={Styles.formButtonContainer}>
+                <Button
+                    variant="primary"
+                    type="submit"
+                    disabled={loading}
+                    label={
+                        loading
+                            ? currentStep === 'login'
+                                ? 'Logging In...'
+                                : 'Verifying...'
+                            : currentStep === 'login'
+                            ? 'Login'
+                            : 'Verify Code'
+                    }
+                    showIcon
+                />
             </div>
+
+            {currentStep === 'login' && (
+                <div className={Styles.formFooter}>
+                    <p>Don&apos;t have an account?</p>
+                        <Link className={Styles.link} href="/volunteer/register"><p>Register</p></Link>
+                </div>
+            )}
+        </form>
         </div>
     );
 }

@@ -70,64 +70,66 @@ export default function UserProfilePage() {
 
     // Only render profile content if user data is successfully loaded and not in loading state
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">
-            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-                <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Profile</h2>
+        <section className='section'>
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">
+                <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Profile</h2>
 
-                {userData.avatar && !avatarError ? (
-                    <div className="relative w-24 h-24 mx-auto mb-4">
-                        <Image
-                            src={userData.avatar}
-                            alt="User Avatar"
-                            width={96}
-                            height={96}
-                            className="rounded-full object-cover border-4 border-blue-500 shadow-md"
-                            onError={() => setAvatarError(true)}
-                            priority
-                        />
-                    </div>
-                ) : userData.avatar && avatarError ? (
-                    <div className="relative w-24 h-24 mx-auto mb-4">
-                        <Image
-                            src={fallbackUrl}
-                            alt="User Avatar Fallback"
-                            width={96}
-                            height={96}
-                            className="rounded-full object-cover border-4 border-blue-500 shadow-md"
-                            priority
-                        />
-                    </div>
-                ) : (
-                    <div className="w-24 h-24 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-5xl font-bold mx-auto mb-4 border-4 border-blue-500 shadow-md">
-                        {firstNameInitial}
-                        {lastNameInitial}
-                    </div>
-                )}
+                    {userData.avatar && !avatarError ? (
+                        <div className="relative w-24 h-24 mx-auto mb-4">
+                            <Image
+                                src={userData.avatar}
+                                alt="User Avatar"
+                                width={96}
+                                height={96}
+                                className="rounded-full object-cover border-4 border-blue-500 shadow-md"
+                                onError={() => setAvatarError(true)}
+                                priority
+                            />
+                        </div>
+                    ) : userData.avatar && avatarError ? (
+                        <div className="relative w-24 h-24 mx-auto mb-4">
+                            <Image
+                                src={fallbackUrl}
+                                alt="User Avatar Fallback"
+                                width={96}
+                                height={96}
+                                className="rounded-full object-cover border-4 border-blue-500 shadow-md"
+                                priority
+                            />
+                        </div>
+                    ) : (
+                        <div className="w-24 h-24 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-5xl font-bold mx-auto mb-4 border-4 border-blue-500 shadow-md">
+                            {firstNameInitial}
+                            {lastNameInitial}
+                        </div>
+                    )}
 
-                <p className="text-2xl font-semibold text-gray-800 mb-2">
-                    {userData.firstName} {userData.middleName} {userData.lastName}
-                </p>
-                <p className="text-gray-600 mb-1">@{userData.username}</p>
-                <p className="text-gray-600">{userData.email}</p>
+                    <p className="text-2xl font-semibold text-gray-800 mb-2">
+                        {userData.firstName} {userData.middleName} {userData.lastName}
+                    </p>
+                    <p className="text-gray-600 mb-1">@{userData.username}</p>
+                    <p className="text-gray-600">{userData.email}</p>
 
-                <div className="mt-6">
-                    <button
-                        onClick={() => router.push('/dashboard')} // Example: Go to dashboard
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors duration-200 mr-2"
-                    >
-                        Go to Dashboard
-                    </button>
-                    <button
-                        onClick={async () => {
-                            await fetch('/api/users/logout', { method: 'GET' });
-                            router.replace('/login'); // Redirect to login after logout
-                        }}
-                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-200"
-                    >
-                        Logout
-                    </button>
+                    <div className="mt-6">
+                        <button
+                            onClick={() => router.push('/dashboard')} // Example: Go to dashboard
+                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors duration-200 mr-2"
+                        >
+                            Go to Dashboard
+                        </button>
+                        <button
+                            onClick={async () => {
+                                await fetch('/api/users/logout', { method: 'GET' });
+                                router.replace('/login'); // Redirect to login after logout
+                            }}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-200"
+                        >
+                            Logout
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 
 export default function HeaderLayout() {
     const pathname = usePathname();
-    const showHeader = pathname !== '/profile' && pathname !== '/login';
+    const showHeader = pathname !== '/dashboard' && pathname !== '/login';
 
     return (
         <>
