@@ -17,6 +17,12 @@ const volunteerRequestSchema = new mongoose.Schema({
     intsagramLink: {},
     linkedInLink: {},
 
+    // educatiion
+    currentGrade: {},
+    institution: {},
+    idImage: {},
+    
+
 }, { timestamps: true });
 
 

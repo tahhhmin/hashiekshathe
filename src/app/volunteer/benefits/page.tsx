@@ -1,6 +1,6 @@
 import React from 'react';
 import Styles from './page.module.css';
-import BentoGrid from '@/components/volunteer/BentoGrid';
+import BentoGrid from '@/ui/Grid/BentoGrid';
 import Button from '@/ui/button/Button';
 import { Award } from 'lucide-react';
 
