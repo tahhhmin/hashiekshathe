@@ -45,10 +45,11 @@ body {
     margin: 0;
 }
 :root {
+    --font-heading: 'Montserrat', sans-serif;
     --font-family: 'Nunito', sans-serif;
 }
 .hero-text {
-    font-family: var(--font-family);
+    font-family: var(--font-heading);
     font-size: 4rem;
     font-weight: 700;
     color: var(--color-text);

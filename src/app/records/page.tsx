@@ -2,6 +2,7 @@ import React from 'react'
 import Styles from './page.module.css'
 import Button from '@/ui/button/Button'
 import Link from 'next/link'
+import { HandCoins, Wallet } from 'lucide-react'
 
 export default function page() {
     return (
@@ -10,9 +11,9 @@ export default function page() {
                 <div className={Styles.card}>
                     <div className={Styles.header}>
                         <div className={Styles.title}>
-                            <h2>Donations</h2>
-                            </div>
-                        <div className={Styles.subtitle}><h3>Subtitle</h3></div>
+                           <HandCoins className={Styles.icon}/> <h2>Donations</h2>
+                        </div>
+                        <h3 className={Styles.subtitle}>Subtitle</h3>
                     </div>
 
                     <div className={Styles.content}>
@@ -28,6 +29,7 @@ export default function page() {
                         <Link href='/records/donations'><Button
                             variant='primary'
                             label='View donations'
+                            showIcon
                         /></Link>
                     </div>
 
@@ -37,9 +39,9 @@ export default function page() {
 <div className={Styles.card}>
                     <div className={Styles.header}>
                         <div className={Styles.title}>
-                            <h2>Expenditures</h2>
+                            <Wallet className={Styles.icon}/> <h2>Expenditures</h2>
                             </div>
-                        <div className={Styles.subtitle}><h3>Subtitle</h3></div>
+                          <h3 className={Styles.subtitle}>Subtitle</h3>
                     </div>
 
                     <div className={Styles.content}>
@@ -54,7 +56,8 @@ export default function page() {
                     <div className={Styles.footer}>
                         <Link href='/records/expenditures'><Button
                             variant='primary'
-                            label='View donations'
+                            label='View expenditures'
+                            showIcon
                         /></Link>
                     </div>
 
