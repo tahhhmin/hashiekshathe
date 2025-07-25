@@ -317,35 +317,35 @@ export default function UserProfilePage() {
 
 
 
-                            <div className={styles.formSection}>
+                                <div className={styles.formSection}>
 
                 <div className=''>
                     {!isEditing ? (
-                            <Button
-                                variant='outlined'
-                                icon='Pencil'
-                                showIcon
-                                onClick={() => setIsEditing(true)}
-                                label="Edit Profile"
-                                
-                            />
-                        ) : (
-                            <div className={styles.editActions}>
                                 <Button
                                     variant='outlined'
-                                    onClick={handleSave}
-                                    disabled={updating}
+                                    icon='Pencil'
                                     showIcon
-                                    icon='Save'
-                                    label={updating ? 'Saving...' : 'Save'}
+                                    onClick={() => setIsEditing(true)}
+                                    label="Edit Profile"
+                                    
                                 />
-                                <Button
-                                    onClick={handleCancel}
-                                    disabled={updating}
-                                    variant='danger'
-                                    label='Cancel'
-                                />
-                            </div>
+                        ) : (
+                                <div className={styles.editActions}>
+                                    <Button
+                                        variant='outlined'
+                                        onClick={handleSave}
+                                        disabled={updating}
+                                        showIcon
+                                        icon='Save'
+                                        label={updating ? 'Saving...' : 'Save'}
+                                    />
+                                    <Button
+                                        onClick={handleCancel}
+                                        disabled={updating}
+                                        variant='danger'
+                                        label='Cancel'
+                                    />
+                                </div>
                         )}
                 </div>
 
@@ -544,8 +544,8 @@ export default function UserProfilePage() {
                                             >
                                                 <option value="">Select Education Level</option>
                                                 <option value="high-school">High School</option>
-                                                <option value="bachelors">Bachelor's Degree</option>
-                                                <option value="masters">Master's Degree</option>
+                                                <option value="bachelors">Bachelor&apos;s Degree</option> {/* Changed here */}
+                                                <option value="masters">Master&apos;s Degree</option>   {/* Changed here */}
                                                 <option value="phd">PhD</option>
                                                 <option value="other">Other</option>
                                             </select>
