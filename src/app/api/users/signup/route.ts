@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/connectDB"; // Adjust path as needed
 import User from "@/models/User"; // Adjust path as needed
 import bcryptjs from "bcryptjs";
+import { sendEmail } from "@/utils/sendMail";
 
 /**
  * Handles user signup.
@@ -75,6 +76,15 @@ export async function POST(request: NextRequest) {
 
         const savedUser = await newUser.save();
         console.log("User signed up:", savedUser.username);
+
+        // Send signup confirmation email with all necessary template variables
+        await sendEmail("signupConfirmation", {
+            to: savedUser.email,
+            name: savedUser.firstName,
+            username: savedUser.username,
+            email: savedUser.email,
+            phoneNumber: savedUser.phoneNumber, // Phone number as default password
+        });
 
         // Return success response
         return NextResponse.json({

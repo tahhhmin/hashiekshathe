@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Our Community!</title>
+    <style>
+        :root {
+            --color-orange: #f0562d;
+            --color-white: #e5e5e5;
+            --color-off-white: #dadada;
+            --color-black: #0e100f;
+            --color-gray: #171717;
+            --color-light-gray: #373737;
+            --color-light1-gray: #212121;
+            --color-light2-gray: #9da1a1;
+            --color-red: #EF4444;
+            --color-dark-red: #692A2B;
+            
+            /* Email-safe colors */
+            --color-background: #e5e5e5;
+            --color-text: #0e100f;
+            --color-card: #dadada;
+            --color-border: #9da1a1;
+            --color-muted: #212121;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', Arial, sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--color-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--color-orange), #e04e28);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h2 {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 15px;
+        }
+
+        .welcome-section p {
+            font-size: 1rem;
+            color: var(--color-text);
+            margin-bottom: 15px;
+        }
+
+        .credentials-section {
+            background-color: var(--color-background);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .credentials-section h3 {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--color-orange);
+            padding-bottom: 10px;
+        }
+
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .credential-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .credential-label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: 1rem;
+        }
+
+        .credential-value {
+            font-family: 'Courier New', monospace;
+            background-color: var(--color-card);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--color-border);
+            font-size: 0.95rem;
+            color: var(--color-text);
+            max-width: 250px;
+            word-break: break-all;
+        }
+
+        .security-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .security-notice p {
+            color: #856404;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .security-notice strong {
+            color: #856404;
+        }
+
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--color-orange), #e04e28);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.125rem;
+            box-shadow: 0 4px 12px rgba(240, 86, 45, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 86, 45, 0.4);
+            color: white;
+        }
+
+        .support-section {
+            background-color: var(--color-background);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .support-section p {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+        }
+
+        .footer {
+            background-color: var(--color-gray);
+            color: var(--color-white);
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .footer p {
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+            color: var(--color-white);
+        }
+
+        .footer p:last-child {
+            margin-bottom: 0;
+            opacity: 0.8;
+        }
+
+        /* Responsive design */
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .credentials-section {
+                padding: 20px;
+            }
+            
+            .credential-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .credential-value {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Welcome!</h1>
+            <p>Your journey begins here</p>
+        </div>
+
+        <div class="content">
+            <div class="welcome-section">
+                <h2>Hello, <strong>{{name}}</strong>!</h2>
+                <p>Your account has been successfully created and you're now part of the Hashi Ekshathe community.</p>
+                <p>We're thrilled to have you join us. You can now log in and start exploring all the amazing features we have to offer.</p>
+            </div>
+
+            <div class="credentials-section">
+                <h3>Your Login Credentials</h3>
+                <div class="credential-item">
+                    <span class="credential-label">Username:</span>
+                    <span class="credential-value">{{username}}</span>
+                </div>
+                <div class="credential-item">
+                    <span class="credential-label">Email:</span>
+                    <span class="credential-value">{{email}}</span>
+                </div>
+                <div class="credential-item">
+                    <span class="credential-label">Password:</span>
+                    <span class="credential-value">{{phoneNumber}}</span>
+                </div>
+            </div>
+
+            <div class="security-notice">
+                <p><strong>Security Note:</strong> Your temporary password is set to your phone number for easy access. We strongly recommend changing it after your first login for enhanced security.</p>
+            </div>
+
+            <div class="cta-section">
+                <a href="https://www.hashiekshathe.org/" class="cta-button">Login to Your Account</a>
+            </div>
+
+            <div class="support-section">
+                <p>If you have any questions or need assistance, please don't hesitate to contact our support team. We're here to help you every step of the way!</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <p>Best regards,</p>
+                <p><strong>The Hashi Ekshathe Team</strong></p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Hashi Ekshathe. All rights reserved.</p>
+            <p>This email was sent to {{email}}.</p>
+        </div>
+    </div>
+</body>
+</html>
