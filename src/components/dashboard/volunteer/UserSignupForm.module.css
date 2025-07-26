@@ -1,0 +1,11 @@
+.form {
+    padding: 1rem;
+    background-color: var(--color-card);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    width: fit-content;
+}
+.buttonContainer {
+    display: flex;
+    flex-direction: column;
+}

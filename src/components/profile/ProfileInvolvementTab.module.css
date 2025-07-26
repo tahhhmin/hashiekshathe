@@ -1,0 +1,52 @@
+.container {
+    background-color: var(--color-card);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.headerTitleContainer {
+    display: flex;
+    gap: 0.5rem;
+}
+.headerIcon {
+    margin: auto 0;
+    width: 36px;
+    height: 36px;
+}
+
+.projectContainer {
+    background-color: var(--color-background);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.projectHeaderContainer {
+    display: flex;
+    justify-content: space-between;
+}
+
+.projectStatusTag {
+    background-color: var(--color-orange);
+    width: fit-content;
+    padding: 0.25rem 1rem;
+    border-radius: 24px;
+    color: var(--color-white);
+    height: fit-content;
+    margin: auto 0;
+    font-size: 14px;
+}
+
+
+
+
+.projectDates {
+    display: inline-flex;
+    gap: 1rem;
+}

@@ -1,0 +1,102 @@
+.sidebarContainer {
+    width: 300px;
+    height: 100vh;
+    background-color: var(--color-card);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid var(--color-border);
+    padding: 1rem;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.sidebarContents {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* No custom scrollbar styling here */
+}
+
+.sidebarContentsHeader {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.sidebarNavbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebarNavbarItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarNavbarItemOption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.09s ease;
+}
+
+.sidebarNavbarItemOption:hover {
+  background-color: var(--color-background);
+}
+
+.sidebarNavbarItemOptionWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  color: var(--color-muted);
+}
+
+.rotateIcon {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+.sidebarNavbarItemDropdown {
+    padding-left: 1.75rem;
+
+}
+
+.dropdownListContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.dropdownItem {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  color: var(--color-muted);
+  transition: background-color 0.09s ease;
+  width: 100%;
+}
+
+.dropdownItem:hover {
+  background-color: var(--color-background);
+}
+
+.sidebarFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}

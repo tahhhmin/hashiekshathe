@@ -79,6 +79,7 @@ export default function Header() {
                         src={Logo}
                         alt="Hashi Ekshathe Logo"
                         className={Styles.logo}
+                        priority
                     />
                 </Link>
             </div>

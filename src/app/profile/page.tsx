@@ -7,7 +7,12 @@ import Image from 'next/image';
 import styles from './page.module.css';
 import { Calendar, MapPin } from 'lucide-react';
 import Button from '@/ui/button/Button';
-import ProfileAccountTab from '@/components/profile/ProfileAccountTab'
+
+import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab'
+import ProfileInvolvementTab from '@/components/profile/ProfileInvolvementTab';
+import ProfileAccountTab from '@/components/profile/ProfileSettingsTab'
+import ProfileProfileTab from '@/components/profile/ProfileProfileTab';
+import ProfileNotificationTab from '@/components/profile/ProfileNotificationTab';
 
 interface UserData {
     firstName: string;
@@ -34,21 +39,16 @@ interface FormErrors {
     [key: string]: string;
 }
 
-
-
-
-
 export default function UserProfilePage() {
     const router = useRouter();
     const [userData, setUserData] = useState<UserData | null>(null);
     const [editData, setEditData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
-    const [avatarError, setAvatarError] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [errors, setErrors] = useState<FormErrors>({});
     const [successMessage, setSuccessMessage] = useState('');
-    const [activeTab, setActiveTab] = useState<'overview' | 'personal' | 'academic' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'profile' | 'involvement' | 'notifications' | 'settings'>('profile');
 
     useEffect(() => {
         async function fetchUserProfile() {
@@ -185,17 +185,32 @@ export default function UserProfilePage() {
 
     const firstNameInitial = userData.firstName ? userData.firstName.charAt(0).toUpperCase() : '';
     const lastNameInitial = userData.lastName ? userData.lastName.charAt(0).toUpperCase() : '';
-    const fallbackUrl = `https://placehold.co/120x120/cccccc/333333?text=${firstNameInitial}${lastNameInitial}`;
 
     const formattedDateJoined = userData?.dateJoined
-    ? new Date(userData.dateJoined).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+        ? new Date(userData.dateJoined).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
         })
-    : "N/A";
+        : "N/A";
 
+    // Function to transform Google Drive view link to direct download link
+    const getGoogleDriveDirectLink = (url: string): string => {
+        if (url.includes('drive.google.com/file/d/') && url.includes('/view')) {
+            const fileIdMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\/view/);
+            if (fileIdMatch && fileIdMatch[1]) {
+                return `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
+            }
+        }
+        return url; // Return original URL if not a problematic Google Drive view link
+    };
 
+    const avatarSrc = userData.avatar ? getGoogleDriveDirectLink(userData.avatar) : '';
+
+    // Determine if we should show avatar or initials
+    // We should show initials if there's no avatar, or if the avatar URL (after transformation) is still problematic.
+    // However, after transformation, it should ideally load. The `onError` will act as a final fallback.
+    const shouldShowInitials = !userData.avatar; // Start with the assumption that if no avatar, show initials
 
     return (
         <section className='section'>
@@ -203,34 +218,33 @@ export default function UserProfilePage() {
 
                 <div className={styles.header}>
                     <div className={styles.avatarContainer}>
-                        {userData.avatar && !avatarError ? (
-                            <div className={styles.avatar}>
-                                <Image
-                                    src={userData.avatar}
-                                    alt="User Avatar"
-                                    className={styles.avatar}
-                                    onError={() => setAvatarError(true)}
-                                    priority
-                                />
-                            </div>
-
-
-                        ) : userData.avatar && avatarError ? (
-                            <div className={styles.avatar}>
-                                <Image
-                                    src={fallbackUrl}
-                                    alt="User Avatar Fallback"
-                                    className={styles.avatar}
-                                    priority
-                                />
-                            </div>
-                        ) : (
+                        {shouldShowInitials ? (
                             <div className={styles.avatar}>
                                 {firstNameInitial}{lastNameInitial}
                             </div>
+                        ) : (
+                            <div className={styles.avatar}>
+                                <img
+                                    src={avatarSrc} // Use the potentially transformed URL
+                                    alt="User Avatar"
+                                    className={styles.avatar}
+                                    onError={(e) => {
+                                        // Hide the img and show initials on error
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                            parent.innerHTML = `${firstNameInitial}${lastNameInitial}`;
+                                            parent.style.display = 'flex';
+                                            parent.style.alignItems = 'center';
+                                            parent.style.justifyContent = 'center';
+                                        }
+                                    }}
+                                />
+                            </div>
                         )}
                         <div className={styles.mobileIdentityContainer}>
-                            <h1 className={styles.nameMobile}>{userData.firstName} {userData.middleName} {userData.lastName}</h1>
+                            <h3 className={styles.nameMobile}>{userData.firstName} {userData.middleName} {userData.lastName}</h3>
                             <p className={styles.usernameMobile}>@{userData.username}</p>
                         </div>
                     </div>
@@ -241,11 +255,11 @@ export default function UserProfilePage() {
                             <p className={styles.username}>@{userData.username}</p>
                         </div>
                         <p className='muted-text'>
-                            Lorem ipsum dolor, sit amet consectetur 
-                            adipisicing elit. Aut sapiente autem quam 
-                            id expedita distinctio illum qui. 
-                            Inventore porro quos quasi. Totam, 
-                            reprehenderit cum. Deleniti ducimus 
+                            Lorem ipsum dolor, sit amet consectetur
+                            adipisicing elit. Aut sapiente autem quam
+                            id expedita distinctio illum qui.
+                            Inventore porro quos quasi. Totam,
+                            reprehenderit cum. Deleniti ducimus
                             officiis amet id asperiores.
                         </p>
 
@@ -257,33 +271,26 @@ export default function UserProfilePage() {
                             <div className={styles.infoItem}>
                                 <Calendar /> {formattedDateJoined}
                             </div>
-
-                            <div className={styles.infoItem}>
-                                <MapPin /> {userData.address}
-                            </div>
                         </div>
                     </div>
                 </div>
 
-
-
                 <div className={styles.navbar}>
-
                     <button
-                        onClick={() => setActiveTab('overview')}
-                        className={`${styles.tab} ${activeTab === 'overview' ? styles.activeTab : ''}`}
+                        onClick={() => setActiveTab('profile')}
+                        className={`${styles.tab} ${activeTab === 'profile' ? styles.activeTab : ''}`}
                     >
                         Profile
                     </button>
                     <button
-                        onClick={() => setActiveTab('personal')}
-                        className={`${styles.tab} ${activeTab === 'personal' ? styles.activeTab : ''}`}
+                        onClick={() => setActiveTab('involvement')}
+                        className={`${styles.tab} ${activeTab === 'involvement' ? styles.activeTab : ''}`}
                     >
                         Involvement
                     </button>
                     <button
-                        onClick={() => setActiveTab('academic')}
-                        className={`${styles.tab} ${activeTab === 'academic' ? styles.activeTab : ''}`}
+                        onClick={() => setActiveTab('notifications')}
+                        className={`${styles.tab} ${activeTab === 'notifications' ? styles.activeTab : ''}`}
                     >
                         Notifications
                     </button>
@@ -293,364 +300,35 @@ export default function UserProfilePage() {
                     >
                         Settings
                     </button>
-
                 </div>
 
-                {activeTab === 'overview' && (
-                    <div className={styles.containerOverview}>
-
-
-                    </div>
+                {activeTab === 'profile' && (
+                    <ProfileProfileTab />
                 )}
 
+                {activeTab === 'involvement' && (
+                    <ProfileInvolvementTab />
+                )}
+                {activeTab === 'notifications' && (
+                    <ProfileNotificationTab />
+                )}
+                {activeTab === 'settings' && (
+                    <ProfileAccountTab />
+                )}
 
-
-
-
-
-
-                    <div className={styles.profileCard}>
-
-
-                        {/* Success Message */}
-                        {successMessage && (
-                            <div className={styles.successMessage}>
-                                {successMessage}
-                            </div>
-                        )}
-
-                        {/* General Error */}
-                        {errors.general && (
-                            <div className={styles.errorMessage}>
-                                {errors.general}
-                            </div>
-                        )}
-
-
-                    {/* Tabs */}
-
-
-                    {/* Form Content */}
-                    <div className={styles.formContent}>
-                        {activeTab === 'personal' && (
-
-
-
-                                <div className={styles.formSection}>
-
-                <div className=''>
-                    {!isEditing ? (
-                                <Button
-                                    variant='outlined'
-                                    icon='Pencil'
-                                    showIcon
-                                    onClick={() => setIsEditing(true)}
-                                    label="Edit Profile"
-                                    
-                                />
-                        ) : (
-                                <div className={styles.editActions}>
-                                    <Button
-                                        variant='outlined'
-                                        onClick={handleSave}
-                                        disabled={updating}
-                                        showIcon
-                                        icon='Save'
-                                        label={updating ? 'Saving...' : 'Save'}
-                                    />
-                                    <Button
-                                        onClick={handleCancel}
-                                        disabled={updating}
-                                        variant='danger'
-                                        label='Cancel'
-                                    />
-                                </div>
-                        )}
-                </div>
-
-                                <div className={styles.formGrid}>
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>First Name *</label>
-                                        {isEditing ? (
-                                            <>
-                                                <input
-                                                    type="text"
-                                                    value={editData?.firstName || ''}
-                                                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                                                    className={`${styles.input} ${errors.firstName ? styles.inputError : ''}`}
-                                                />
-                                                {errors.firstName && <span className={styles.errorText}>{errors.firstName}</span>}
-                                            </>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.firstName}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Last Name *</label>
-                                        {isEditing ? (
-                                            <>
-                                                <input
-                                                    type="text"
-                                                    value={editData?.lastName || ''}
-                                                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                                                    className={`${styles.input} ${errors.lastName ? styles.inputError : ''}`}
-                                                />
-                                                {errors.lastName && <span className={styles.errorText}>{errors.lastName}</span>}
-                                            </>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.lastName}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Middle Name</label>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editData?.middleName || ''}
-                                                onChange={(e) => handleInputChange('middleName', e.target.value)}
-                                                className={styles.input}
-                                            />
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.middleName || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Username *</label>
-                                        {isEditing ? (
-                                            <>
-                                                <input
-                                                    type="text"
-                                                    value={editData?.username || ''}
-                                                    onChange={(e) => handleInputChange('username', e.target.value)}
-                                                    className={`${styles.input} ${errors.username ? styles.inputError : ''}`}
-                                                />
-                                                {errors.username && <span className={styles.errorText}>{errors.username}</span>}
-                                            </>
-                                        ) : (
-                                            <div className={styles.displayValue}>@{userData.username}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Email *</label>
-                                        {isEditing ? (
-                                            <>
-                                                <input
-                                                    type="email"
-                                                    value={editData?.email || ''}
-                                                    onChange={(e) => handleInputChange('email', e.target.value)}
-                                                    className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-                                                />
-                                                {errors.email && <span className={styles.errorText}>{errors.email}</span>}
-                                            </>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.email}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Phone Number</label>
-                                        {isEditing ? (
-                                            <>
-                                                <input
-                                                    type="tel"
-                                                    value={editData?.phoneNumber || ''}
-                                                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                                                    className={`${styles.input} ${errors.phoneNumber ? styles.inputError : ''}`}
-                                                    placeholder="+1234567890"
-                                                />
-                                                {errors.phoneNumber && <span className={styles.errorText}>{errors.phoneNumber}</span>}
-                                            </>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.phoneNumber || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Date of Birth</label>
-                                        {isEditing ? (
-                                            <input
-                                                type="date"
-                                                value={editData?.dateOfBirth ? new Date(editData.dateOfBirth).toISOString().split('T')[0] : ''}
-                                                onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                                                className={styles.input}
-                                            />
-                                        ) : (
-                                            <div className={styles.displayValue}>
-                                                {userData.dateOfBirth ? new Date(userData.dateOfBirth).toLocaleDateString() : 'Not specified'}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Gender</label>
-                                        {isEditing ? (
-                                            <select
-                                                value={editData?.gender || ''}
-                                                onChange={(e) => handleInputChange('gender', e.target.value)}
-                                                className={styles.select}
-                                            >
-                                                <option value="">Select Gender</option>
-                                                <option value="male">Male</option>
-                                                <option value="female">Female</option>
-                                                <option value="other">Other</option>
-                                                <option value="prefer-not-to-say">Prefer not to say</option>
-                                            </select>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.gender || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                                                    <div className={styles.formGrid}>
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Team Name</label>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editData?.teamName || ''}
-                                                onChange={(e) => handleInputChange('teamName', e.target.value)}
-                                                className={styles.input}
-                                            />
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.teamName || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Team Role</label>
-                                        {isEditing ? (
-                                            <select
-                                                value={editData?.teamRole || ''}
-                                                onChange={(e) => handleInputChange('teamRole', e.target.value)}
-                                                className={styles.select}
-                                            >
-                                                <option value="">Select Role</option>
-                                                <option value="leader">Team Leader</option>
-                                                <option value="member">Team Member</option>
-                                                <option value="coordinator">Coordinator</option>
-                                                <option value="advisor">Advisor</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.teamRole || 'Not specified'}</div>
-                                        )}
-                                    </div>
-                                </div>
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Address</label>
-                                    {isEditing ? (
-                                        <textarea
-                                            value={editData?.address || ''}
-                                            onChange={(e) => handleInputChange('address', e.target.value)}
-                                            className={styles.textarea}
-                                            rows={3}
-                                        />
-                                    ) : (
-                                        <div className={styles.displayValue}>{userData.address || 'Not specified'}</div>
-                                    )}
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Location</label>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editData?.location || ''}
-                                            onChange={(e) => handleInputChange('location', e.target.value)}
-                                            className={styles.input}
-                                            placeholder="City, Country"
-                                        />
-                                    ) : (
-                                        <div className={styles.displayValue}>{userData.location || 'Not specified'}</div>
-                                    )}
-                                </div>
-
-                                <div className={styles.formGrid}>
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Institution</label>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editData?.institution || ''}
-                                                onChange={(e) => handleInputChange('institution', e.target.value)}
-                                                className={styles.input}
-                                            />
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.institution || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Education Level</label>
-                                        {isEditing ? (
-                                            <select
-                                                value={editData?.educationLevel || ''}
-                                                onChange={(e) => handleInputChange('educationLevel', e.target.value)}
-                                                className={styles.select}
-                                            >
-                                                <option value="">Select Education Level</option>
-                                                <option value="high-school">High School</option>
-                                                <option value="bachelors">Bachelor&apos;s Degree</option> {/* Changed here */}
-                                                <option value="masters">Master&apos;s Degree</option>   {/* Changed here */}
-                                                <option value="phd">PhD</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.educationLevel || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Department</label>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editData?.department || ''}
-                                                onChange={(e) => handleInputChange('department', e.target.value)}
-                                                className={styles.input}
-                                            />
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.department || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.checkboxLabel}>
-                                            {isEditing ? (
-                                                <input
-                                                    type="checkbox"
-                                                    checked={editData?.isDeptMember || false}
-                                                    onChange={(e) => handleInputChange('isDeptMember', e.target.checked)}
-                                                    className={styles.checkbox}
-                                                />
-                                            ) : null}
-                                            <span className={styles.checkboxText}>
-                                                {isEditing ? 'Department Member' : `Department Member: ${userData.isDeptMember ? 'Yes' : 'No'}`}
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'academic' && (
-                            <div className={styles.formSection}>
-                                
-                            </div>
-                        )}
-
-                        {activeTab === 'settings' && (
-                            <ProfileAccountTab />
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-
+                <div className={styles.profileCard}>
+                    {/* Success Message */}
+                    {successMessage && (
+                        <div className={styles.successMessage}>
+                            {successMessage}
+                        </div>
+                    )}
+                    {/* General Error */}
+                    {errors.general && (
+                        <div className={styles.errorMessage}>
+                            {errors.general}
+                        </div>
+                    )}
                 </div>
             </div>
         </section>
