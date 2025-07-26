@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './page.module.css';
 import { Calendar, MapPin } from 'lucide-react';
 import Button from '@/ui/button/Button';
+import ProfileAccountTab from '@/components/profile/ProfileAccountTab'
 
 interface UserData {
     firstName: string;
@@ -32,6 +33,10 @@ interface UserData {
 interface FormErrors {
     [key: string]: string;
 }
+
+
+
+
 
 export default function UserProfilePage() {
     const router = useRouter();
@@ -182,6 +187,16 @@ export default function UserProfilePage() {
     const lastNameInitial = userData.lastName ? userData.lastName.charAt(0).toUpperCase() : '';
     const fallbackUrl = `https://placehold.co/120x120/cccccc/333333?text=${firstNameInitial}${lastNameInitial}`;
 
+    const formattedDateJoined = userData?.dateJoined
+    ? new Date(userData.dateJoined).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        })
+    : "N/A";
+
+
+
     return (
         <section className='section'>
             <div className={styles.container}>
@@ -214,6 +229,10 @@ export default function UserProfilePage() {
                                 {firstNameInitial}{lastNameInitial}
                             </div>
                         )}
+                        <div className={styles.mobileIdentityContainer}>
+                            <h1 className={styles.nameMobile}>{userData.firstName} {userData.middleName} {userData.lastName}</h1>
+                            <p className={styles.usernameMobile}>@{userData.username}</p>
+                        </div>
                     </div>
 
                     <div className={styles.profileIdentityContainer}>
@@ -221,7 +240,7 @@ export default function UserProfilePage() {
                             <h1 className={styles.name}>{userData.firstName} {userData.middleName} {userData.lastName}</h1>
                             <p className={styles.username}>@{userData.username}</p>
                         </div>
-                        <p>
+                        <p className='muted-text'>
                             Lorem ipsum dolor, sit amet consectetur 
                             adipisicing elit. Aut sapiente autem quam 
                             id expedita distinctio illum qui. 
@@ -236,7 +255,7 @@ export default function UserProfilePage() {
                             </div>
 
                             <div className={styles.infoItem}>
-                                <Calendar /> {userData.dateJoined}
+                                <Calendar /> {formattedDateJoined}
                             </div>
 
                             <div className={styles.infoItem}>
@@ -254,19 +273,19 @@ export default function UserProfilePage() {
                         onClick={() => setActiveTab('overview')}
                         className={`${styles.tab} ${activeTab === 'overview' ? styles.activeTab : ''}`}
                     >
-                        Overview
+                        Profile
                     </button>
                     <button
                         onClick={() => setActiveTab('personal')}
                         className={`${styles.tab} ${activeTab === 'personal' ? styles.activeTab : ''}`}
                     >
-                        Personal Info
+                        Involvement
                     </button>
                     <button
                         onClick={() => setActiveTab('academic')}
                         className={`${styles.tab} ${activeTab === 'academic' ? styles.activeTab : ''}`}
                     >
-                        Academic
+                        Notifications
                     </button>
                     <button
                         onClick={() => setActiveTab('settings')}
@@ -484,6 +503,42 @@ export default function UserProfilePage() {
                                             <div className={styles.displayValue}>{userData.gender || 'Not specified'}</div>
                                         )}
                                     </div>
+
+                                                                    <div className={styles.formGrid}>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Team Name</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData?.teamName || ''}
+                                                onChange={(e) => handleInputChange('teamName', e.target.value)}
+                                                className={styles.input}
+                                            />
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.teamName || 'Not specified'}</div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.label}>Team Role</label>
+                                        {isEditing ? (
+                                            <select
+                                                value={editData?.teamRole || ''}
+                                                onChange={(e) => handleInputChange('teamRole', e.target.value)}
+                                                className={styles.select}
+                                            >
+                                                <option value="">Select Role</option>
+                                                <option value="leader">Team Leader</option>
+                                                <option value="member">Team Member</option>
+                                                <option value="coordinator">Coordinator</option>
+                                                <option value="advisor">Advisor</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        ) : (
+                                            <div className={styles.displayValue}>{userData.teamRole || 'Not specified'}</div>
+                                        )}
+                                    </div>
+                                </div>
                                 </div>
 
                                 <div className={styles.formGroup}>
@@ -514,11 +569,7 @@ export default function UserProfilePage() {
                                         <div className={styles.displayValue}>{userData.location || 'Not specified'}</div>
                                     )}
                                 </div>
-                            </div>
-                        )}
 
-                        {activeTab === 'academic' && (
-                            <div className={styles.formSection}>
                                 <div className={styles.formGrid}>
                                     <div className={styles.formGroup}>
                                         <label className={styles.label}>Institution</label>
@@ -587,56 +638,19 @@ export default function UserProfilePage() {
                             </div>
                         )}
 
-                        {activeTab === 'settings' && (
+                        {activeTab === 'academic' && (
                             <div className={styles.formSection}>
-                                <div className={styles.formGrid}>
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Team Name</label>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editData?.teamName || ''}
-                                                onChange={(e) => handleInputChange('teamName', e.target.value)}
-                                                className={styles.input}
-                                            />
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.teamName || 'Not specified'}</div>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.label}>Team Role</label>
-                                        {isEditing ? (
-                                            <select
-                                                value={editData?.teamRole || ''}
-                                                onChange={(e) => handleInputChange('teamRole', e.target.value)}
-                                                className={styles.select}
-                                            >
-                                                <option value="">Select Role</option>
-                                                <option value="leader">Team Leader</option>
-                                                <option value="member">Team Member</option>
-                                                <option value="coordinator">Coordinator</option>
-                                                <option value="advisor">Advisor</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        ) : (
-                                            <div className={styles.displayValue}>{userData.teamRole || 'Not specified'}</div>
-                                        )}
-                                    </div>
-                                </div>
+                                
                             </div>
+                        )}
+
+                        {activeTab === 'settings' && (
+                            <ProfileAccountTab />
                         )}
                     </div>
 
                     {/* Action Buttons */}
-                    <div className={styles.actions}>
-                        <button
-                            onClick={handleLogout}
-                            className={`${styles.button} ${styles.logoutButton}`}
-                        >
-                            Logout
-                        </button>
-                    </div>
+
                 </div>
             </div>
         </section>

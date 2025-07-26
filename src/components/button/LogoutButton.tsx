@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Button from '@/ui/button/Button';
 
 export default function LogoutButton() {
     const router = useRouter();
@@ -46,13 +47,14 @@ export default function LogoutButton() {
 
     return (
         <div className="flex flex-col items-center">
-            <button
+            <Button
                 onClick={handleLogout}
                 disabled={loading}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            >
-                {loading ? 'Logging out...' : 'Logout'}
-            </button>
+                variant='danger'
+            
+                label={loading ? 'Logging out...' : 'Logout'}
+            />
+
             {message && (
                 <p className={`mt-2 text-sm ${isError ? 'text-red-600' : 'text-green-600'}`}>
                     {message}

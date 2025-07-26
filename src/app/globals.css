@@ -8,6 +8,8 @@
     --color-light-gray: #373737;
     --color-light1-gray: #212121;
     --color-light2-gray: #9da1a1;
+    --color-red: #EF4444 ;
+    --color-dark-red: #692A2B ;
 
     /* Default to light theme */
     --color-background: var(--color-white);
