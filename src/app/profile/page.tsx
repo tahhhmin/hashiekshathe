@@ -3,14 +3,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Image from 'next/image'; // Import Next.js Image component
+
 import styles from './page.module.css';
 import { Calendar, MapPin } from 'lucide-react';
-import Button from '@/ui/button/Button';
 
-import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab'
+// Import your tab components (they will handle their own state and logic internally)
 import ProfileInvolvementTab from '@/components/profile/ProfileInvolvementTab';
-import ProfileAccountTab from '@/components/profile/ProfileSettingsTab'
+import ProfileAccountTab from '@/components/profile/ProfileSettingsTab'; // Renamed for clarity as per previous file
 import ProfileProfileTab from '@/components/profile/ProfileProfileTab';
 import ProfileNotificationTab from '@/components/profile/ProfileNotificationTab';
 
@@ -35,6 +35,7 @@ interface UserData {
     dateJoined?: string;
 }
 
+// FormErrors interface is still useful if your ProfileProfileTab uses it internally
 interface FormErrors {
     [key: string]: string;
 }
@@ -42,12 +43,11 @@ interface FormErrors {
 export default function UserProfilePage() {
     const router = useRouter();
     const [userData, setUserData] = useState<UserData | null>(null);
-    const [editData, setEditData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [updating, setUpdating] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [errors, setErrors] = useState<FormErrors>({});
-    const [successMessage, setSuccessMessage] = useState('');
+    // Removed unused state variables: updating, isEditing, editData, errors, successMessage
+    // These should ideally be managed within the respective tab components if they handle editing.
+    // For this example, I'm assuming ProfileProfileTab will manage its own edit state.
+
     const [activeTab, setActiveTab] = useState<'profile' | 'involvement' | 'notifications' | 'settings'>('profile');
 
     useEffect(() => {
@@ -58,7 +58,6 @@ export default function UserProfilePage() {
 
                 if (response.ok && data.success) {
                     setUserData(data.data);
-                    setEditData(data.data);
                 } else {
                     console.warn(`Client-side: API denied access to /user/profile (Status: ${response.status}). Redirecting.`);
                     router.replace('/login');
@@ -75,104 +74,9 @@ export default function UserProfilePage() {
         fetchUserProfile();
     }, [router]);
 
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors = {};
-
-        if (!editData?.firstName?.trim()) {
-            newErrors.firstName = 'First name is required';
-        }
-
-        if (!editData?.lastName?.trim()) {
-            newErrors.lastName = 'Last name is required';
-        }
-
-        if (!editData?.username?.trim()) {
-            newErrors.username = 'Username is required';
-        } else if (editData.username.length < 3) {
-            newErrors.username = 'Username must be at least 3 characters';
-        }
-
-        if (!editData?.email?.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editData.email)) {
-            newErrors.email = 'Please enter a valid email address';
-        }
-
-        if (editData?.phoneNumber && !/^\+?[0-9\s\-]{7,15}$/.test(editData.phoneNumber)) {
-            newErrors.phoneNumber = 'Please enter a valid phone number';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleInputChange = (field: keyof UserData, value: string | boolean) => {
-        if (!editData) return;
-
-        setEditData({
-            ...editData,
-            [field]: value
-        });
-
-        // Clear error for this field when user starts typing
-        if (errors[field]) {
-            setErrors({
-                ...errors,
-                [field]: ''
-            });
-        }
-    };
-
-    const handleSave = async () => {
-        if (!validateForm()) {
-            return;
-        }
-
-        setUpdating(true);
-        setErrors({});
-
-        try {
-            const response = await fetch('/api/users/update-user', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(editData),
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                setUserData(data.user);
-                setEditData(data.user);
-                setIsEditing(false);
-                setSuccessMessage('Profile updated successfully!');
-                setTimeout(() => setSuccessMessage(''), 3000);
-            } else {
-                if (data.details) {
-                    setErrors(data.details);
-                } else {
-                    setErrors({ general: data.error || 'Failed to update profile' });
-                }
-            }
-        } catch (err) {
-            console.error('Error updating profile:', err);
-            setErrors({ general: 'Network error. Please try again.' });
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    const handleCancel = () => {
-        setEditData(userData);
-        setIsEditing(false);
-        setErrors({});
-    };
-
-    const handleLogout = async () => {
-        await fetch('/api/users/logout', { method: 'GET' });
-        router.replace('/login');
-    };
+    // Removed unused functions: validateForm, handleInputChange, handleSave, handleCancel, handleLogout
+    // These functions were not called within this component and are likely intended for ProfileProfileTab
+    // or other specific tab components. Each tab component should manage its own logic.
 
     if (loading || !userData) {
         return (
@@ -207,40 +111,40 @@ export default function UserProfilePage() {
 
     const avatarSrc = userData.avatar ? getGoogleDriveDirectLink(userData.avatar) : '';
 
-    // Determine if we should show avatar or initials
-    // We should show initials if there's no avatar, or if the avatar URL (after transformation) is still problematic.
-    // However, after transformation, it should ideally load. The `onError` will act as a final fallback.
-    const shouldShowInitials = !userData.avatar; // Start with the assumption that if no avatar, show initials
-
     return (
         <section className='section'>
             <div className={styles.container}>
 
                 <div className={styles.header}>
                     <div className={styles.avatarContainer}>
-                        {shouldShowInitials ? (
+                        {userData.avatar ? (
                             <div className={styles.avatar}>
-                                {firstNameInitial}{lastNameInitial}
-                            </div>
-                        ) : (
-                            <div className={styles.avatar}>
-                                <img
-                                    src={avatarSrc} // Use the potentially transformed URL
+                                <Image
+                                    src={avatarSrc}
                                     alt="User Avatar"
                                     className={styles.avatar}
+                                    width={100} // Set appropriate width for your avatar
+                                    height={100} // Set appropriate height for your avatar
+                                    priority={true} // Prioritize loading for a better LCP
                                     onError={(e) => {
-                                        // Hide the img and show initials on error
+                                        // Fallback to initials if image fails to load
                                         const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
+                                        target.style.display = 'none'; // Hide the broken image element
                                         const parent = target.parentElement;
                                         if (parent) {
-                                            parent.innerHTML = `${firstNameInitial}${lastNameInitial}`;
+                                            // Ensure this creates a div for initials to be styled correctly
+                                            parent.innerHTML = `<div class="${styles.initialsFallback}">${firstNameInitial}${lastNameInitial}</div>`;
                                             parent.style.display = 'flex';
                                             parent.style.alignItems = 'center';
                                             parent.style.justifyContent = 'center';
                                         }
                                     }}
                                 />
+                            </div>
+                        ) : (
+                            // Show initials directly if no avatar URL is provided
+                            <div className={styles.avatar}>
+                                {firstNameInitial}{lastNameInitial}
                             </div>
                         )}
                         <div className={styles.mobileIdentityContainer}>
@@ -265,7 +169,7 @@ export default function UserProfilePage() {
 
                         <div className={styles.headerInfoContainer}>
                             <div className={styles.infoItem}>
-                                <MapPin /> {userData.address}
+                                <MapPin /> {userData.address || 'N/A'}
                             </div>
 
                             <div className={styles.infoItem}>
@@ -302,6 +206,7 @@ export default function UserProfilePage() {
                     </button>
                 </div>
 
+                {/* Render active tab component */}
                 {activeTab === 'profile' && (
                     <ProfileProfileTab />
                 )}
@@ -316,20 +221,9 @@ export default function UserProfilePage() {
                     <ProfileAccountTab />
                 )}
 
-                <div className={styles.profileCard}>
-                    {/* Success Message */}
-                    {successMessage && (
-                        <div className={styles.successMessage}>
-                            {successMessage}
-                        </div>
-                    )}
-                    {/* General Error */}
-                    {errors.general && (
-                        <div className={styles.errorMessage}>
-                            {errors.general}
-                        </div>
-                    )}
-                </div>
+                {/* Removed success and error messages from UserProfilePage
+                    as they are typically managed by the specific tab components
+                    that handle updates (e.g., ProfileProfileTab) */}
             </div>
         </section>
     );

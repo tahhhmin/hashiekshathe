@@ -1,3 +1,4 @@
+// app/user/profile/page.tsx
 import React from 'react'
 import styles from './ProfileInvolvementTab.module.css'
 import { Inbox } from 'lucide-react'
@@ -11,7 +12,7 @@ export default function ProfileInvolvementTab() {
                     <h2 className={styles.headerTitle}>Current Projects</h2>
                 </div>
                 <p className='muted-text'>
-                    Initiatives we're working on to make an impact
+                    Initiatives we&apos;re working on to make an impact
                 </p>
             </div>
 
@@ -23,14 +24,14 @@ export default function ProfileInvolvementTab() {
                             Active
                         </div>
                     </div>
-                    
+
                     <div className={styles.projectContent}>
                         {/*
                             certificates
                             volunteering hours
                             role
                             team
-                            
+
                         */}
                         A comprehensive online platform for teaching AI concepts to students and professionals.
                     </div>
@@ -47,13 +48,6 @@ export default function ProfileInvolvementTab() {
                     </div>
                 </div>
             </div>
-
-
-
-
-
-
-
         </div>
     )
 }
