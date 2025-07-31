@@ -34,7 +34,10 @@
   flex-direction: column;
   gap: 0.25rem;
 }
-
+.sectionTitleWrapper {
+    display: inline-flex;
+    gap: 0.5rem;
+}
 .sidebarNavbarItem {
   display: flex;
   flex-direction: column;

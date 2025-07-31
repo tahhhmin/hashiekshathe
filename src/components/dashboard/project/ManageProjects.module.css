@@ -1,0 +1,144 @@
+/* app/projects/manage/ManageProjects.module.css */
+
+.container {
+
+}
+
+
+
+
+.message {
+    margin-bottom: 24px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.successMessage {
+    background-color: #f0fff4; /* green-50 */
+    color: #2f855a; /* green-700 */
+    border-color: #b7e4c7; /* green-200 */
+}
+
+.errorMessage {
+    background-color: #fff5f5; /* red-50 */
+    color: #c53030; /* red-700 */
+    border-color: #feb2b2; /* red-200 */
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 48px); /* Adjust based on header/footer */
+    font-size: 1.125rem;
+    color: #4a5568;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    height: 32px;
+    width: 32px;
+    color: var(--color-orange); /* blue-600 */
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.noProjects {
+    text-align: center;
+    padding: 48px;
+    border: 2px dashed #e2e8f0; /* gray-200 */
+    border-radius: 8px;
+    color: #718096; /* gray-600 */
+    font-size: 1.125rem;
+}
+
+.projectList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.projectCard {
+    background-color: var(--color-card);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.projectHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+
+.statusBadge {
+    padding: 4px 12px;
+    border-radius: 9999px; /* full rounded */
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.statusBadge.upcoming {
+    background-color: #feebc8; /* orange-100 */
+    color: #c05621; /* orange-800 */
+}
+
+.statusBadge.ongoing {
+    background-color: #bee3f8; /* blue-100 */
+    color: #2b6cb0; /* blue-800 */
+}
+
+.statusBadge.completed {
+    background-color: #c6f6d5; /* green-100 */
+    color: #2f855a; /* green-800 */
+}
+
+.projectLocation {
+    font-size: 0.875rem;
+    color: #4a5568;
+    margin-bottom: 4px;
+}
+
+.projectDates {
+    font-size: 0.875rem;
+    color: #4a5568;
+    margin-bottom: 12px;
+}
+
+.projectDescription {
+    font-size: 1rem;
+    color: #4a5568;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    flex-grow: 1; /* Allows description to take available space */
+}
+
+.projectActions {
+    display: flex;
+    gap: 12px;
+    margin-top: auto; /* Pushes buttons to the bottom */
+}
+
+
+.spinnerSmall {
+    animation: spin 1s linear infinite;
+    height: 16px;
+    width: 16px;
+    color: currentColor; /* Inherits color from parent */
+}

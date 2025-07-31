@@ -29,10 +29,11 @@ export default function SignupTab() {
 
   return (
     <div className={Styles.container}>
+    <UserSignupForm prefill={prefillData} />
       {/* RegisterList component. When 'onFill' is called, it updates 'prefillData' state */}
       <RegisterList onFill={setPrefillData} />
       {/* UserSignupForm component receives 'prefillData' to populate its fields */}
-      <UserSignupForm prefill={prefillData} />
+
     </div>
   );
 }

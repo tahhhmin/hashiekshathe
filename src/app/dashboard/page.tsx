@@ -6,11 +6,18 @@ import Styles from './page.module.css';
 import Sidebar, { SidebarSection } from '@/ui/sidebar/Sidebar';
 import Button from '@/ui/button/Button';
 import Signup from '@/components/dashboard/volunteer/SignupTab';
+import CreateProjectForm from '@/components/dashboard/project/CreateProjectForm';
+import EditProjectForm from '@/components/dashboard/project/ManageProjects';
 
 // Dummy components for demonstration – replace these with actual ones
 const ProjectList = () => <p>Project List Content</p>;
-const AddProjectForm = () => <p>Add Project Form</p>;
 const AnnouncementList = () => <p>Announcement List Content</p>;
+const CreateAnnouncement = () => <p>Create New Announcement Content</p>;
+const ViewAllVolunteers = () => <p>View All Volunteers Content</p>;
+const DepartmentA = () => <p>Department A Content</p>;
+const DepartmentB = () => <p>Department B Content</p>;
+
+
 
 const header = {
     logo: '/favicon.svg',
@@ -26,61 +33,27 @@ const footer = {
 };
 
 const sections: SidebarSection[] = [
-    //{
-      //  title: 'Platform',
-        //items: [
-          //  { label: 'Analytics', icon: 'ChartLine', dropdown: ['Reports', 'Graphs'] },
-          //  { label: 'Settings', icon: 'Settings', dropdown: ['x', 'y'] },
-           // { label: 'Admin', icon: 'ShieldUser', dropdown: ['x', 'y'] },
-       // ],
-  //  },
-   // {
-     //   title: 'Manage',
-     //   items: [
-      //      { label: 'Projects', icon: 'Boxes', dropdown: ['View List', 'Add New'] },
-       //     {
-        //        label: 'Announcements',
-         //       icon: 'Megaphone',
-      //          dropdown: ['View announcement list', 'Create new announcement'],
-       //     },
-        //    { label: 'FAQs', icon: 'MessageCircleQuestionMark', dropdown: ['View List', 'Add New'] },
-    //    ],
- //   },
-  //  {
-  //      title: 'Manage',
- //       items: [
- //           { label: 'Department', icon: 'BookUser', dropdown: ['List', 'Requests'] },
- //           { label: 'Volunteers', icon: 'Users', dropdown: ['List', 'Requests'] },
-//        ],
- //   },
- //   {
- //       title: 'Finance',
- //       items: [
-//            { label: 'Records', icon: 'Archive', dropdown: ['List', 'Requests'] },
- //       ],
-//    },
-  //  {
-    //    title: 'Contacts',
-   //     items: [
-  //          { label: 'Contact', icon: 'Mail', dropdown: ['List', 'Requests'] },
-  //          { label: 'Collaborate', icon: 'Handshake', dropdown: ['List', 'Requests'] },
-  //      ],
-  //  },
-
+    {
+        title: 'Project',
+        icon: 'Boxes',
+        items: [
+            { label: 'View List', uniqueId: 'project_view_list' },
+            { label: 'Create', uniqueId: 'project_add_new' },
+        ],
+    },
     {
         title: 'Volunteer',
+        icon: 'Users',
         items: [
-            { label: 'Volunteer', icon: 'Users', dropdown: ['View all volunteer', 'Signup'] },
-            { label: 'Departments', icon: 'Users', dropdown: ['a', 'b'] }
+            { label: 'View all volunteer', uniqueId: 'volunteer_view_all' },
+            { label: 'Signup', uniqueId: 'volunteer_signup' },
         ]
     }
-
-]; 
+];
 
 export default function Page() {
     const [showSidebar, setShowSidebar] = useState(true);
     const [selectedContent, setSelectedContent] = useState<string | null>(null);
-
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(max-width: 750px)');
@@ -94,17 +67,20 @@ export default function Page() {
         return () => mediaQuery.removeEventListener('change', handleResize);
     }, []);
 
-
-    const handleSubItemClick = (label: string) => {
-        console.log('Clicked:', label);
-        setSelectedContent(label);
+    const handleItemClick = (uniqueId: string, label: string, sectionTitle: string) => {
+        console.log(`Clicked: ${label} (ID: ${uniqueId}) in section: ${sectionTitle}`);
+        setSelectedContent(uniqueId);
     };
 
     const contentComponents: Record<string, React.ReactNode> = {
-        'View List': <ProjectList />,
-        'Add New': <AddProjectForm />,
-        'View announcement list': <AnnouncementList />,
-        'Signup': <Signup/>,
+        'project_view_list': <EditProjectForm />,
+        'project_add_new': <CreateProjectForm />,
+        'project_announcement_list': <AnnouncementList />,
+        'project_create_announcement': <CreateAnnouncement />,
+        'volunteer_view_all': <ViewAllVolunteers />,
+        'volunteer_signup': <Signup />,
+        'volunteer_department_a': <DepartmentA />,
+        'volunteer_department_b': <DepartmentB />,
         // Add more mappings as needed
     };
 
@@ -112,7 +88,12 @@ export default function Page() {
         <div className={Styles.dashboard}>
             {showSidebar && (
                 <div className={Styles.sidebar}>
-                    <Sidebar header={header} sections={sections} footer={footer} onSubItemClick={handleSubItemClick} />
+                    <Sidebar 
+                        header={header} 
+                        sections={sections} 
+                        footer={footer} 
+                        onItemClick={handleItemClick} 
+                    />
                 </div>
             )}
 

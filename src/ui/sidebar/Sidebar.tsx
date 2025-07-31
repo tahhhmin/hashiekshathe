@@ -1,24 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import * as Icons from 'lucide-react';
 import Image from 'next/image';
 import Styles from './Sidebar.module.css';
 
 interface SidebarItem {
   label: string;
-  icon: keyof typeof Icons;
-  dropdown: string[];
+  uniqueId: string; // Add unique identifier for each item
 }
 
 interface SidebarSection {
   title: string;
+  icon: keyof typeof Icons;
   items: SidebarItem[];
 }
 
-// ✅ Export it so page.tsx can import and use it
-export type { SidebarSection };
-
+// Export types for usage
+export type { SidebarSection, SidebarItem };
 
 interface SidebarHeader {
   logo: string;
@@ -37,21 +36,15 @@ interface SidebarProps {
   header: SidebarHeader;
   sections: SidebarSection[];
   footer: SidebarFooter;
-  onSubItemClick?: (label: string) => void;
+  onItemClick?: (uniqueId: string, label: string, sectionTitle: string) => void;
 }
 
 export default function Sidebar({
   header,
   sections,
   footer,
-  onSubItemClick,
+  onItemClick,
 }: SidebarProps) {
-  const [openIndex, setOpenIndex] = useState<string | null>(null);
-
-  const toggleDropdown = (label: string) => {
-    setOpenIndex(openIndex === label ? null : label);
-  };
-
   return (
     <aside className={Styles.sidebarContainer}>
       {/* Header */}
@@ -65,64 +58,42 @@ export default function Sidebar({
 
       {/* Scrollable Content */}
       <div className={Styles.sidebarContents}>
-        {sections.map((section, secIdx) => (
-          <div key={secIdx}>
-            <div className={Styles.sidebarContentsHeader}>
-              <p className="muted-text">{section.title}</p>
-            </div>
+        {sections.map((section, secIdx) => {
+          const iconKey = section.icon as keyof typeof Icons;
+          const IconComponent = Icons[iconKey] as React.ComponentType<{
+            className?: string;
+            size?: number;
+          }>;
 
-            <div className={Styles.sidebarNavbar}>
-              {section.items.map((item, itemIdx) => {
-                const isOpen = openIndex === `${secIdx}-${itemIdx}`;
-                const iconKey = item.icon as keyof typeof Icons;
-                const IconComponent = Icons[iconKey] as React.ComponentType<{
-                  className?: string;
-                  size?: number;
-                }>;
+          return (
+            <div key={secIdx}>
+              <div className={Styles.sidebarContentsHeader}>
+                <div className={Styles.sectionTitleWrapper}>
+                  <IconComponent className={Styles.icon} size={20} />
+                  <p className="muted-text">{section.title}</p>
+                </div>
+              </div>
 
-                return (
-                  <div key={item.label} className={Styles.sidebarNavbarItem}>
+              <div className={Styles.sidebarNavbar}>
+                {section.items.map((item, itemIdx) => (
+                  <div key={item.uniqueId} className={Styles.sidebarNavbarItem}>
                     <div
                       className={Styles.sidebarNavbarItemOption}
-                      onClick={() => toggleDropdown(`${secIdx}-${itemIdx}`)}
+                      onClick={() => onItemClick?.(item.uniqueId, item.label, section.title)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && onItemClick?.(item.uniqueId, item.label, section.title)
+                      }
                     >
-                      <div className={Styles.sidebarNavbarItemOptionWrapper}>
-                        <IconComponent className={Styles.icon} size={20} />
-                        <p>{item.label}</p>
-                      </div>
-                      <Icons.ChevronRight
-                        className={`${Styles.icon} ${isOpen ? Styles.rotateIcon : ''}`}
-                        size={18}
-                      />
+                      <p>{item.label}</p>
                     </div>
-
-                    {isOpen && (
-                      <div className={Styles.sidebarNavbarItemDropdown}>
-                        <div className={Styles.dropdownListContainer}>
-                          <div className={Styles.verticalLine}></div>
-                          {item.dropdown.map((sub, subIdx) => (
-                            <p
-                              key={subIdx}
-                              className={Styles.dropdownItem}
-                              onClick={() => onSubItemClick?.(sub)}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) =>
-                                e.key === 'Enter' && onSubItemClick?.(sub)
-                              }
-                            >
-                              {sub}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Footer */}
