@@ -1,12 +1,12 @@
-// CreateProjectForm.tsx
 import React, { useState } from 'react';
-import { Plus, Trash2, Calendar, MapPin, Tag, Users, Building2, DollarSign, Image, FileText, Globe, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, MapPin, Tag, Users, Building2, DollarSign, Image, FileText, Globe, Eye, EyeOff } from 'lucide-react';
 import styles from './CreateProjectForm.module.css'; // Import the CSS module
+import UserSearchModal from './UserSearchModal'; // Import the new modal component
 
+// Interfaces for form data structure
 interface LocationData {
   city: string;
-  division: string;
-  country: string;
+  division?: string; // Optional as per backend validation (can be empty string)
 }
 
 interface ImpactData {
@@ -15,30 +15,48 @@ interface ImpactData {
   materialsDistributed: number;
 }
 
+// User interface for the search modal and selected volunteer
+interface User {
+  _id: string; // MongoDB's default ID
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string; // Often used for user ID in frontend
+}
+
+interface VolunteerData {
+  volunteerUserID: string; // The backend expects this, will come from selected user _id
+  volunteerEmail: string; // Will come from selected user email
+  volunteeringHours?: number;
+  certificateURL?: string;
+  impactDescription?: string;
+}
+
 interface CollaboratorData {
   name: string;
-  logoURL: string;
-  website: string;
+  logoURL?: string;
+  website?: string;
 }
 
 interface SponsorData {
   name: string;
-  logoURL: string;
-  website: string;
+  logoURL?: string;
+  website?: string;
 }
 
 interface ProjectFormData {
   name: string;
   location: LocationData;
   startDate: string;
-  endDate: string;
+  endDate?: string; // Optional
   description: string;
   tags: string[];
   thumbnailURL: string;
   bannerURL: string;
-  galleryURL: string[];
+  gallerySpreadsheetURL: string;
   financialRecordURL: string;
   impact: ImpactData;
+  volunteers: VolunteerData[];
   collaborators: CollaboratorData[];
   sponsors: SponsorData[];
   status: 'Upcoming' | 'Ongoing' | 'Completed';
@@ -48,16 +66,17 @@ interface ProjectFormData {
 const CreateProjectForm: React.FC = () => {
   const [formData, setFormData] = useState<ProjectFormData>({
     name: '',
-    location: { city: '', division: '', country: 'Bangladesh' },
+    location: { city: '', division: '' },
     startDate: '',
     endDate: '',
     description: '',
     tags: [''],
     thumbnailURL: '',
     bannerURL: '',
-    galleryURL: [''],
+    gallerySpreadsheetURL: '',
     financialRecordURL: '',
     impact: { peopleServed: 0, volunteersEngaged: 0, materialsDistributed: 0 },
+    volunteers: [],
     collaborators: [],
     sponsors: [],
     status: 'Upcoming',
@@ -66,7 +85,9 @@ const CreateProjectForm: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showUserSearchModal, setShowUserSearchModal] = useState(false); // State to control modal visibility
 
+  // Generic handler for input changes, including nested objects (e.g., location.city)
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => {
       if (field.includes('.')) {
@@ -83,36 +104,46 @@ const CreateProjectForm: React.FC = () => {
     });
   };
 
-  const handleArrayChange = (field: 'tags' | 'galleryURL', index: number, value: string) => {
+  // Handler for changes in array fields (tags)
+  const handleArrayChange = (field: 'tags', index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].map((item, i) => i === index ? value : item)
     }));
   };
 
-  const addArrayItem = (field: 'tags' | 'galleryURL') => {
+  // Function to add a new item to an array field
+  const addArrayItem = (field: 'tags') => {
     setFormData(prev => ({
       ...prev,
       [field]: [...prev[field], '']
     }));
   };
 
-  const removeArrayItem = (field: 'tags' | 'galleryURL', index: number) => {
+  // Function to remove an item from an array field
+  const removeArrayItem = (field: 'tags', index: number) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index)
     }));
   };
 
-  const handleCollaboratorChange = (index: number, field: keyof CollaboratorData, value: string) => {
+  // Handler for changes in nested object arrays (collaborators, sponsors, volunteers)
+  const handleNestedArrayChange = <T extends CollaboratorData | SponsorData | VolunteerData>(
+    field: 'collaborators' | 'sponsors' | 'volunteers',
+    index: number,
+    subField: keyof T,
+    value: string | number
+  ) => {
     setFormData(prev => ({
       ...prev,
-      collaborators: prev.collaborators.map((collab, i) =>
-        i === index ? { ...collab, [field]: value } : collab
+      [field]: prev[field].map((item, i) =>
+        i === index ? { ...item, [subField]: value } : item
       )
     }));
   };
 
+  // Functions for adding/removing collaborators
   const addCollaborator = () => {
     setFormData(prev => ({
       ...prev,
@@ -127,15 +158,7 @@ const CreateProjectForm: React.FC = () => {
     }));
   };
 
-  const handleSponsorChange = (index: number, field: keyof SponsorData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      sponsors: prev.sponsors.map((sponsor, i) =>
-        i === index ? { ...sponsor, [field]: value } : sponsor
-      )
-    }));
-  };
-
+  // Functions for adding/removing sponsors
   const addSponsor = () => {
     setFormData(prev => ({
       ...prev,
@@ -150,19 +173,71 @@ const CreateProjectForm: React.FC = () => {
     }));
   };
 
+  // --- Volunteer Logic Changes ---
+
+  const handleOpenUserSearchModal = () => {
+    setShowUserSearchModal(true);
+  };
+
+  const handleCloseUserSearchModal = () => {
+    setShowUserSearchModal(false);
+  };
+
+  // Callback when a user is selected from the modal
+  const handleUserSelectedAsVolunteer = (user: User) => {
+    setFormData(prev => {
+      // Check if the user is already added as a volunteer
+      const isAlreadyVolunteer = prev.volunteers.some(
+        (v) => v.volunteerUserID === user._id
+      );
+
+      if (isAlreadyVolunteer) {
+        setMessage({ type: 'error', text: `${user.firstName} ${user.lastName} is already a volunteer for this project.` });
+        return prev;
+      }
+
+      return {
+        ...prev,
+        volunteers: [
+          ...prev.volunteers,
+          {
+            volunteerUserID: user._id, // Use _id from backend
+            volunteerEmail: user.email,
+            volunteeringHours: 0, // Default or leave empty for later input
+            certificateURL: '',
+            impactDescription: '',
+          },
+        ],
+      };
+    });
+    setMessage(null); // Clear previous message if successful add
+    handleCloseUserSearchModal(); // Close modal after selection
+  };
+
+  const removeVolunteer = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.filter((_, i) => i !== index)
+    }));
+  };
+
+  // --- End Volunteer Logic Changes ---
+
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
 
     try {
-      // Filter out empty tags and gallery URLs
+      // Clean data before sending: filter out empty string inputs from arrays
       const cleanedData = {
         ...formData,
         tags: formData.tags.filter(tag => tag.trim() !== ''),
-        galleryURL: formData.galleryURL.filter(url => url.trim() !== ''),
         collaborators: formData.collaborators.filter(collab => collab.name.trim() !== ''),
-        sponsors: formData.sponsors.filter(sponsor => sponsor.name.trim() !== '')
+        sponsors: formData.sponsors.filter(sponsor => sponsor.name.trim() !== ''),
+        // Volunteers already contain selected data, no need to filter by email trim
+        // as email and userID are pre-filled from selection.
       };
 
       const response = await fetch('/api/projects/create', {
@@ -175,19 +250,20 @@ const CreateProjectForm: React.FC = () => {
 
       if (result.success) {
         setMessage({ type: 'success', text: result.message });
-        // Reset form
+        // Reset form to initial state after successful submission
         setFormData({
           name: '',
-          location: { city: '', division: '', country: 'Bangladesh' },
+          location: { city: '', division: '' },
           startDate: '',
           endDate: '',
           description: '',
           tags: [''],
           thumbnailURL: '',
           bannerURL: '',
-          galleryURL: [''],
+          gallerySpreadsheetURL: '',
           financialRecordURL: '',
           impact: { peopleServed: 0, volunteersEngaged: 0, materialsDistributed: 0 },
+          volunteers: [],
           collaborators: [],
           sponsors: [],
           status: 'Upcoming',
@@ -197,6 +273,7 @@ const CreateProjectForm: React.FC = () => {
         setMessage({ type: 'error', text: result.message });
       }
     } catch (error) {
+      console.error('Submission error:', error);
       setMessage({ type: 'error', text: 'Failed to create project. Please try again.' });
     } finally {
       setLoading(false);
@@ -235,8 +312,10 @@ const CreateProjectForm: React.FC = () => {
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 className={styles.input}
                 placeholder="Enter project name"
+                maxLength={100}
                 required
               />
+              <p className={styles.charCount}>{formData.name.length}/100 characters</p>
             </div>
 
             <div>
@@ -245,7 +324,7 @@ const CreateProjectForm: React.FC = () => {
               </label>
               <select
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value)}
+                onChange={(e) => handleInputChange('status', e.target.value as 'Upcoming' | 'Ongoing' | 'Completed')}
                 className={styles.select}
               >
                 <option value="Upcoming">Upcoming</option>
@@ -264,6 +343,7 @@ const CreateProjectForm: React.FC = () => {
                 rows={4}
                 className={styles.textarea}
                 placeholder="Describe your project..."
+                maxLength={2000}
                 required
               />
               <p className={styles.charCount}>{formData.description.length}/2000 characters</p>
@@ -299,23 +379,10 @@ const CreateProjectForm: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.location.division}
+                value={formData.location.division || ''}
                 onChange={(e) => handleInputChange('location.division', e.target.value)}
                 className={styles.input}
                 placeholder="Enter division"
-              />
-            </div>
-
-            <div>
-              <label className={styles.label}>
-                Country
-              </label>
-              <input
-                type="text"
-                value={formData.location.country}
-                onChange={(e) => handleInputChange('location.country', e.target.value)}
-                className={styles.input}
-                placeholder="Enter country"
               />
             </div>
 
@@ -338,7 +405,7 @@ const CreateProjectForm: React.FC = () => {
               </label>
               <input
                 type="date"
-                value={formData.endDate}
+                value={formData.endDate || ''}
                 onChange={(e) => handleInputChange('endDate', e.target.value)}
                 className={styles.input}
               />
@@ -361,6 +428,7 @@ const CreateProjectForm: React.FC = () => {
                 onChange={(e) => handleArrayChange('tags', index, e.target.value)}
                 className={styles.input}
                 placeholder="Enter tag"
+                required={formData.tags.length === 1 && tag.trim() === ''}
               />
               {formData.tags.length > 1 && (
                 <button
@@ -422,37 +490,16 @@ const CreateProjectForm: React.FC = () => {
 
             <div>
               <label className={styles.label}>
-                Gallery URLs *
+                Gallery Spreadsheet URL *
               </label>
-              {formData.galleryURL.map((url, index) => (
-                <div key={index} className={styles.arrayItem}>
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => handleArrayChange('galleryURL', index, e.target.value)}
-                    className={styles.input}
-                    placeholder="https://example.com/gallery1.jpg"
-                  />
-                  {formData.galleryURL.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem('galleryURL', index)}
-                      className={styles.removeButton}
-                    >
-                      <Trash2 className={styles.iconSmall} />
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => addArrayItem('galleryURL')}
-                className={styles.addButton}
-              >
-                <Plus className={styles.iconSmall} />
-                Add Gallery Image
-              </button>
+              <input
+                type="url"
+                value={formData.gallerySpreadsheetURL}
+                onChange={(e) => handleInputChange('gallerySpreadsheetURL', e.target.value)}
+                className={styles.input}
+                placeholder="https://example.com/gallery_spreadsheet.xlsx"
+                required
+              />
             </div>
 
             <div>
@@ -520,6 +567,97 @@ const CreateProjectForm: React.FC = () => {
           </div>
         </div>
 
+        {/* Volunteers */}
+        <div className={styles.formSection}>
+          <h2 className={styles.sectionTitle}>
+            <Users className={styles.icon} />
+            Volunteers
+          </h2>
+
+          {formData.volunteers.map((volunteer, index) => (
+            <div key={index} className={styles.nestedFormItem}>
+              <div className={styles.nestedFormHeader}>
+                <h3 className={styles.nestedFormTitle}>
+                  {/* Display selected volunteer's name/email */}
+                  Volunteer: {volunteer.volunteerEmail}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => removeVolunteer(index)}
+                  className={styles.removeButton}
+                >
+                  <Trash2 className={styles.iconSmall} />
+                </button>
+              </div>
+
+              <div className={styles.grid2Col}>
+                {/* These fields are now read-only, populated from selection */}
+                <div>
+                  <label className={styles.label}>Volunteer User ID</label>
+                  <input
+                    type="text"
+                    value={volunteer.volunteerUserID}
+                    className={styles.input}
+                    readOnly
+                    disabled // Disable direct input
+                  />
+                </div>
+                <div>
+                  <label className={styles.label}>Volunteer Email</label>
+                  <input
+                    type="email"
+                    value={volunteer.volunteerEmail}
+                    className={styles.input}
+                    readOnly
+                    disabled // Disable direct input
+                  />
+                </div>
+                <div>
+                  <label className={styles.label}>Volunteering Hours</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={volunteer.volunteeringHours || 0}
+                    onChange={(e) => handleNestedArrayChange<VolunteerData>('volunteers', index, 'volunteeringHours', parseInt(e.target.value) || 0)}
+                    className={styles.input}
+                    placeholder="0"
+                  />
+                </div>
+                <div className={styles.colSpan2}>
+                  <label className={styles.label}>Certificate URL</label>
+                  <input
+                    type="url"
+                    value={volunteer.certificateURL || ''}
+                    onChange={(e) => handleNestedArrayChange<VolunteerData>('volunteers', index, 'certificateURL', e.target.value)}
+                    className={styles.input}
+                    placeholder="https://example.com/certificate.pdf"
+                  />
+                </div>
+                <div className={styles.colSpan2}>
+                  <label className={styles.label}>Impact Description</label>
+                  <textarea
+                    value={volunteer.impactDescription || ''}
+                    onChange={(e) => handleNestedArrayChange<VolunteerData>('volunteers', index, 'impactDescription', e.target.value)}
+                    rows={2}
+                    className={styles.textarea}
+                    placeholder="Describe their impact..."
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={handleOpenUserSearchModal} // This button opens the modal
+            className={styles.addButton}
+          >
+            <Plus className={styles.iconSmall} />
+            Add Volunteer from List
+          </button>
+        </div>
+
+
         {/* Collaborators */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
@@ -542,13 +680,14 @@ const CreateProjectForm: React.FC = () => {
 
               <div className={styles.grid3Col}>
                 <div>
-                  <label className={styles.label}>Name</label>
+                  <label className={styles.label}>Name *</label>
                   <input
                     type="text"
                     value={collaborator.name}
-                    onChange={(e) => handleCollaboratorChange(index, 'name', e.target.value)}
+                    onChange={(e) => handleNestedArrayChange<CollaboratorData>('collaborators', index, 'name', e.target.value)}
                     className={styles.input}
                     placeholder="Organization name"
+                    required
                   />
                 </div>
 
@@ -556,8 +695,8 @@ const CreateProjectForm: React.FC = () => {
                   <label className={styles.label}>Logo URL</label>
                   <input
                     type="url"
-                    value={collaborator.logoURL}
-                    onChange={(e) => handleCollaboratorChange(index, 'logoURL', e.target.value)}
+                    value={collaborator.logoURL || ''}
+                    onChange={(e) => handleNestedArrayChange<CollaboratorData>('collaborators', index, 'logoURL', e.target.value)}
                     className={styles.input}
                     placeholder="https://example.com/logo.png"
                   />
@@ -567,8 +706,8 @@ const CreateProjectForm: React.FC = () => {
                   <label className={styles.label}>Website</label>
                   <input
                     type="url"
-                    value={collaborator.website}
-                    onChange={(e) => handleCollaboratorChange(index, 'website', e.target.value)}
+                    value={collaborator.website || ''}
+                    onChange={(e) => handleNestedArrayChange<CollaboratorData>('collaborators', index, 'website', e.target.value)}
                     className={styles.input}
                     placeholder="https://example.com"
                   />
@@ -609,13 +748,14 @@ const CreateProjectForm: React.FC = () => {
 
               <div className={styles.grid3Col}>
                 <div>
-                  <label className={styles.label}>Name</label>
+                  <label className={styles.label}>Name *</label>
                   <input
                     type="text"
                     value={sponsor.name}
-                    onChange={(e) => handleSponsorChange(index, 'name', e.target.value)}
+                    onChange={(e) => handleNestedArrayChange<SponsorData>('sponsors', index, 'name', e.target.value)}
                     className={styles.input}
                     placeholder="Sponsor name"
+                    required
                   />
                 </div>
 
@@ -623,8 +763,8 @@ const CreateProjectForm: React.FC = () => {
                   <label className={styles.label}>Logo URL</label>
                   <input
                     type="url"
-                    value={sponsor.logoURL}
-                    onChange={(e) => handleSponsorChange(index, 'logoURL', e.target.value)}
+                    value={sponsor.logoURL || ''}
+                    onChange={(e) => handleNestedArrayChange<SponsorData>('sponsors', index, 'logoURL', e.target.value)}
                     className={styles.input}
                     placeholder="https://example.com/logo.png"
                   />
@@ -634,8 +774,8 @@ const CreateProjectForm: React.FC = () => {
                   <label className={styles.label}>Website</label>
                   <input
                     type="url"
-                    value={sponsor.website}
-                    onChange={(e) => handleSponsorChange(index, 'website', e.target.value)}
+                    value={sponsor.website || ''}
+                    onChange={(e) => handleNestedArrayChange<SponsorData>('sponsors', index, 'website', e.target.value)}
                     className={styles.input}
                     placeholder="https://example.com"
                   />
@@ -672,8 +812,8 @@ const CreateProjectForm: React.FC = () => {
             </button>
             <p className={styles.toggleDescription}>
               {formData.isPublic
-                ? 'This project will be visible to everyone'
-                : 'This project will only be visible to authorized users'
+                ? 'This project will be visible to everyone.'
+                : 'This project will only be visible to authorized users.'
               }
             </p>
           </div>
@@ -686,16 +826,17 @@ const CreateProjectForm: React.FC = () => {
             onClick={() => {
               setFormData({
                 name: '',
-                location: { city: '', division: '', country: 'Bangladesh' },
+                location: { city: '', division: '' },
                 startDate: '',
                 endDate: '',
                 description: '',
                 tags: [''],
                 thumbnailURL: '',
                 bannerURL: '',
-                galleryURL: [''],
+                gallerySpreadsheetURL: '',
                 financialRecordURL: '',
                 impact: { peopleServed: 0, volunteersEngaged: 0, materialsDistributed: 0 },
+                volunteers: [],
                 collaborators: [],
                 sponsors: [],
                 status: 'Upcoming',
@@ -727,6 +868,14 @@ const CreateProjectForm: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {/* User Search Modal */}
+      {showUserSearchModal && (
+        <UserSearchModal
+          onSelectUser={handleUserSelectedAsVolunteer}
+          onClose={handleCloseUserSearchModal}
+        />
+      )}
     </div>
   );
 };

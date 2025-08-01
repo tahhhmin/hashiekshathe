@@ -36,6 +36,9 @@ const userSchema = new mongoose.Schema({
     // Team and Department Details
     teamName: { type: String, trim: true, default: "No Team" },
     teamRole: { type: String, trim: true, default: "Member" },
+    
+    // things that needs to be added here
+    projects: [{   }],
 
     isDeptMember: { type: Boolean, default: false },
     department: { type: String, trim: true, enum: ["Administration", "Human Resources", "other"] },

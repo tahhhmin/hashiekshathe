@@ -1,347 +1,196 @@
-'use client';
+// app/projects/[slug]/page.tsx
+// This is a Server Component, no "use client" directive needed at the top
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Loader2, Calendar, MapPin, Tag, Users, Building2,
-  DollarSign, Image, FileText, Globe, ExternalLink,
-  Edit, ShieldCheck,
-  XCircle
-} from 'lucide-react';
-import styles from './ProjectProfile.module.css'; // New CSS module
-import Button from '@/ui/button/Button'; // Assuming you have a reusable Button component
+import { notFound } from 'next/navigation'; // For handling 404 cases
+import Image from 'next/image';
+import styles from './page.module.css'; // Optional: Create a separate CSS module for this page
+import { connectDB } from '@/config/connectDB'; // Import connectDB
+import Project from '@/models/Project'; // Import Project model
+import User from '@/models/User'; // Import User model (assuming you have one)
 
-interface LocationData {
-  city: string;
-  division?: string;
-  country: string;
-}
-
-interface ImpactData {
-  peopleServed: number;
-  volunteersEngaged: number;
-  materialsDistributed: number;
-}
-
-interface CollaboratorData {
-  name: string;
-  logoURL?: string;
-  website?: string;
-}
-
-interface SponsorData {
-  name: string;
-  logoURL?: string;
-  website?: string;
-}
-
-interface VolunteerData {
-  user: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  hours: number;
+// Define the Project type (or import from a shared types file like src/types/index.ts)
+interface VolunteerDetail {
+  volunteerUserID: string;
+  volunteerEmail: string;
+  volunteeringHours: number;
   certificateURL?: string;
   impactDescription?: string;
+  _id: string; // MongoDB ObjectId for the embedded document
 }
 
-interface ProjectData {
+interface Project {
   _id: string;
   name: string;
   slug: string;
-  location: LocationData;
-  startDate: string;
-  endDate?: string;
+  thumbnailURL: string;
+  bannerURL?: string;
+  location: {
+    city: string;
+    division?: string;
+    country: string;
+  };
   description: string;
   tags: string[];
-  thumbnailURL: string;
-  bannerURL: string;
-  galleryURL: string[];
-  financialRecordURL: string;
-  impact: ImpactData;
-  volunteers: VolunteerData[];
-  collaborators: CollaboratorData[];
-  sponsors: SponsorData[];
-  status: 'Upcoming' | 'Ongoing' | 'Completed';
-  isPublic: boolean;
+  startDate: string;
+  impact?: any;
+  volunteers?: VolunteerDetail[]; // Correctly define volunteers as an array of VolunteerDetail objects
+  collaborators?: { name: string; logoURL?: string; website?: string }[];
+  sponsors?: { name: string; logoURL?: string; website?: string }[];
+  status: string;
 }
 
-const ProjectProfilePage: React.FC = () => {
-  const params = useParams();
-  const { slug } = params; // This will be the slug or ID depending on how you route
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Define the props for the dynamic page component
+interface ProjectProfilePageProps {
+  params: { slug: string };
+}
 
-  // Placeholder for admin check - In a real app, this would come from auth context
-  // For demonstration, let's assume 'isAdmin' is set based on some login state
-  // For now, let's hardcode it to true to see the admin options
-  const [isAdmin, setIsAdmin] = useState(true); 
+const ProjectProfilePage = async ({ params }: ProjectProfilePageProps) => {
+  const { slug } = params;
 
-  useEffect(() => {
-    // In a real application, you'd verify the user's role here
-    // For now, let's just make it true for development to see the admin view.
-    // In production, ensure this is tied to actual user roles.
-    // Example:
-    // const checkAdminStatus = async () => {
-    //   // Fetch user session or check a token
-    //   const response = await fetch('/api/auth/session'); // Example API endpoint
-    //   const session = await response.json();
-    //   if (session?.user?.role === 'admin') {
-    //     setIsAdmin(true);
-    //   } else {
-    //     setIsAdmin(false);
-    //   }
-    // };
-    // checkAdminStatus();
-  }, []);
+  let project: Project | null = null;
+  let error: string | null = null;
+  let volunteersWithUserDetails: any[] = []; // To store enriched volunteer data
 
-  useEffect(() => {
-    if (!slug) return;
+  try {
+    // Direct database interaction for server component
+    await connectDB(); // Connect to the database
+    const rawProject = await Project.findOne({ slug: slug, isPublic: true }).lean(); // Use .lean() for plain JS objects
 
-    const fetchProject = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Corrected API endpoint to match the [slug] dynamic route
-        const response = await fetch(`/api/projects/${slug}`); 
-        const result = await response.json();
+    if (!rawProject) {
+      notFound(); // If project not found or not public, trigger 404
+    }
 
-        if (result.success) {
-          setProject(result.project);
-        } else {
-          setError(result.message || 'Failed to fetch project details.');
-        }
-      } catch (err) {
-        console.error("Error fetching project:", err);
-        setError('An unexpected error occurred while fetching the project.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Convert Mongoose document to plain object for consistency and to pass to client components if needed
+    // Although in this server component, we can use the lean object directly.
+    project = JSON.parse(JSON.stringify(rawProject));
 
-    fetchProject();
-  }, [slug]);
+    // Fetch user details for each volunteer
+    if (project?.volunteers && project.volunteers.length > 0) {
+      const volunteerUserIDs = project.volunteers.map(v => v.volunteerUserID);
+      const users = await User.find({ _id: { $in: volunteerUserIDs } }).lean();
 
-  if (loading) {
-    return (
-      <section className={styles.section}>
-        <div className={styles.loadingContainer}>
-          <Loader2 className={styles.spinner} />
-          <p>Loading project details...</p>
-        </div>
-      </section>
-    );
-  }
+      volunteersWithUserDetails = project.volunteers.map(vol => {
+        const user = users.find(u => u._id.toString() === vol.volunteerUserID);
+        return {
+          ...vol,
+          userName: user?.name || user?.username || 'Unknown User', // Prioritize name, then username
+          userEmail: user?.email || vol.volunteerEmail, // Fallback to project's stored email
+        };
+      });
+    }
 
-  if (error) {
-    return (
-      <section className={styles.section}>
-        <div className={styles.errorContainer}>
-          <XCircle className={styles.errorIcon} />
-          <p>{error}</p>
-          <Link href="/projects"> {/* Link back to the projects listing */}
-            <Button variant='secondary' label='Back to Projects' />
-          </Link>
-        </div>
-      </section>
-    );
+  } catch (err: any) {
+    console.error(`Error fetching project profile for slug "${slug}":`, err);
+    error = err instanceof Error ? err.message : String(err);
+    // If an error occurs, and project wasn't found (or another severe error), we might still want to show 404
+    if (error.includes('Failed to fetch project') || error.includes('not found')) {
+      notFound();
+    }
   }
 
   if (!project) {
     return (
-      <section className={styles.section}>
-        <div className={styles.errorContainer}>
-          <XCircle className={styles.errorIcon} />
-          <p>Project not found.</p>
-          <Link href="/projects"> {/* Link back to the projects listing */}
-            <Button variant='secondary' label='Back to Projects' />
-          </Link>
-        </div>
-      </section>
+      <div className={styles.container}>
+        <h1 className={styles.mainHeading}>Project Not Found</h1>
+        {error && <p className={styles.errorMessage}>{error}</p>}
+        {!error && <p className={styles.noProjectMessage}>The project you are looking for does not exist or is not public.</p>}
+      </div>
     );
   }
 
   return (
-    <section className={styles.section}>
-      <div className={styles.container}>
-        {isAdmin && (
-          <div className={styles.adminActions}>
-            <Link href={`/projects/edit/${project._id}`}>
-              <Button
-                variant='primary'
-                label='Edit Project'
-                showIcon
-                icon='Edit'
-              />
-            </Link>
-            <span className={styles.adminNote}>
-              <ShieldCheck size={18} /> Admin View
+    <section className='section'>
+    <div className={styles.container}>
+      {project.bannerURL && (
+        <div className={styles.bannerImageWrapper}>
+          <Image
+            src={project.bannerURL}
+            alt={`${project.name} banner`}
+            layout="fill"
+            objectFit="cover"
+            className={styles.bannerImage}
+          />
+        </div>
+      )}
+
+      <div className={styles.contentWrapper}>
+        <h1 className={styles.projectTitle}>{project.name}</h1>
+        <p className={styles.projectLocation}>
+          Location: {project.location.city}, {project.location.division ? `${project.location.division}, ` : ''}{project.location.country}
+        </p>
+        <p className={styles.projectDate}>
+          Start Date: {new Date(project.startDate).toLocaleDateString()}
+        </p>
+        <p className={styles.projectStatus}>
+          Status: {project.status}
+        </p>
+
+        <div className={styles.tagsContainer}>
+          {project.tags.map((tag, index) => (
+            <span key={index} className={styles.tag}>
+              {tag}
             </span>
+          ))}
+        </div>
+
+        <p className={styles.projectDescription}>{project.description}</p>
+
+        {project.impact && (
+          <div className={styles.section}>
+            <h2>Impact</h2>
+            {/* Render specific impact details here */}
+            {project.impact.peopleServed > 0 && <p>People Served: {project.impact.peopleServed}</p>}
+            {project.impact.volunteersEngaged > 0 && <p>Volunteers Engaged: {project.impact.volunteersEngaged}</p>}
+            {project.impact.materialsDistributed > 0 && <p>Materials Distributed: {project.impact.materialsDistributed}</p>}
+            {/* Add more impact fields as needed */}
           </div>
         )}
 
-        {/* Project Header */}
-        <div className={styles.header}>
-          <img src={project.bannerURL} alt={`${project.name} Banner`} className={styles.bannerImage} onError={(e) => { e.currentTarget.src = 'https://placehold.co/1200x400/cccccc/333333?text=Project+Banner'; }} />
-          <div className={styles.headerContent}>
-            <h1 className={styles.title}>{project.name}</h1>
-            <div className={`${styles.statusBadge} ${styles[project.status.toLowerCase()]}`}>
-              {project.status}
-            </div>
-            <p className={styles.location}>
-              <MapPin size={18} /> {project.location.city}, {project.location.division && `${project.location.division}, `}{project.location.country}
-            </p>
-            <p className={styles.dates}>
-              <Calendar size={18} /> {new Date(project.startDate).toLocaleDateString()}
-              {project.endDate && ` - ${new Date(project.endDate).toLocaleDateString()}`}
-            </p>
+        {volunteersWithUserDetails.length > 0 && (
+          <div className={styles.section}>
+            <h2>Volunteers</h2>
+            <ul className={styles.list}>
+              {volunteersWithUserDetails.map((volunteer, index) => (
+                <li key={volunteer._id || index}>
+                  <strong>{volunteer.userName}</strong> ({volunteer.userEmail}) - {volunteer.volunteeringHours} hours
+                  {volunteer.impactDescription && ` - "${volunteer.impactDescription}"`}
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+        )}
 
-        {/* Project Details */}
-        <div className={styles.contentGrid}>
-          <div className={styles.mainContent}>
-            <h2 className={styles.sectionTitle}>Project Overview</h2>
-            <p className={styles.description}>{project.description}</p>
-
-            {project.tags.length > 0 && (
-              <div className={styles.tagsContainer}>
-                <h3 className={styles.subSectionTitle}><Tag size={16} /> Tags:</h3>
-                <div className={styles.tagsList}>
-                  {project.tags.map((tag, index) => (
-                    <span key={index} className={styles.tag}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Impact Metrics */}
-            <h2 className={styles.sectionTitle}>Impact</h2>
-            <div className={styles.impactMetrics}>
-              <div className={styles.metricCard}>
-                <Users size={24} />
-                <span>{project.impact.peopleServed}</span>
-                <p>People Served</p>
-              </div>
-              <div className={styles.metricCard}>
-                <Users size={24} />
-                <span>{project.impact.volunteersEngaged}</span>
-                <p>Volunteers Engaged</p>
-              </div>
-              <div className={styles.metricCard}>
-                <Users size={24} />
-                <span>{project.impact.materialsDistributed}</span>
-                <p>Materials Distributed</p>
-              </div>
-            </div>
-
-            {/* Collaborators */}
-            {project.collaborators.length > 0 && (
-              <div className={styles.collaboratorsSection}>
-                <h2 className={styles.sectionTitle}><Building2 className={styles.icon} /> Collaborators</h2>
-                <div className={styles.orgList}>
-                  {project.collaborators.map((collab, index) => (
-                    <div key={index} className={styles.orgItem}>
-                      {collab.logoURL && <img src={collab.logoURL} alt={collab.name} className={styles.orgLogo} onError={(e) => { e.currentTarget.src = 'https://placehold.co/80x80/cccccc/333333?text=Logo'; }} />}
-                      <p className={styles.orgName}>{collab.name}</p>
-                      {collab.website && (
-                        <a href={collab.website} target="_blank" rel="noopener noreferrer" className={styles.orgWebsite}>
-                          <ExternalLink size={16} /> Website
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sponsors */}
-            {project.sponsors.length > 0 && (
-              <div className={styles.sponsorsSection}>
-                <h2 className={styles.sectionTitle}><DollarSign className={styles.icon} /> Sponsors</h2>
-                <div className={styles.orgList}>
-                  {project.sponsors.map((sponsor, index) => (
-                    <div key={index} className={styles.orgItem}>
-                      {sponsor.logoURL && <img src={sponsor.logoURL} alt={sponsor.name} className={styles.orgLogo} onError={(e) => { e.currentTarget.src = 'https://placehold.co/80x80/cccccc/333333?text=Logo'; }} />}
-                      <p className={styles.orgName}>{sponsor.name}</p>
-                      {sponsor.website && (
-                        <a href={sponsor.website} target="_blank" rel="noopener noreferrer" className={styles.orgWebsite}>
-                          <ExternalLink size={16} /> Website
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        {project.collaborators && project.collaborators.length > 0 && (
+          <div className={styles.section}>
+            <h2>Collaborators</h2>
+            <ul className={styles.list}>
+              {project.collaborators.map((collaborator, index) => (
+                <li key={index}>
+                  {collaborator.name}
+                  {collaborator.website && ` - `}
+                  {collaborator.website && <a href={collaborator.website} target="_blank" rel="noopener noreferrer">{collaborator.website}</a>}
+                </li>
+              ))}
+            </ul>
           </div>
+        )}
 
-          <div className={styles.sidebar}>
-            {/* Gallery */}
-            {project.galleryURL.length > 0 && (
-              <div className={styles.gallerySection}>
-                <h2 className={styles.sectionTitle}><Image className={styles.icon} /> Gallery</h2>
-                <div className={styles.imageGrid}>
-                  {project.galleryURL.map((url, index) => (
-                    <img key={index} src={url} alt={`Gallery image ${index + 1}`} className={styles.galleryImage} onError={(e) => { e.currentTarget.src = `https://placehold.co/120x120/cccccc/333333?text=Image+${index + 1}`; }} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Financial Records */}
-            {project.financialRecordURL && (
-              <div className={styles.financialSection}>
-                <h2 className={styles.sectionTitle}><FileText className={styles.icon} /> Financial Records</h2>
-                <a href={project.financialRecordURL} target="_blank" rel="noopener noreferrer" className={styles.financialLink}>
-                  View Financial Report <ExternalLink size={16} />
-                </a>
-              </div>
-            )}
-
-            {/* Volunteers (if populated, and if relevant to display here) */}
-            {project.volunteers && project.volunteers.length > 0 && (
-              <div className={styles.volunteersSection}>
-                <h2 className={styles.sectionTitle}><Users className={styles.icon} /> Volunteers</h2>
-                <ul className={styles.volunteerList}>
-                  {project.volunteers.map((volunteer, index) => (
-                    <li key={index} className={styles.volunteerItem}>
-                      <span className={styles.volunteerName}>{volunteer.user.name}</span>
-                      <span className={styles.volunteerHours}>({volunteer.hours} hours)</span>
-                      {volunteer.certificateURL && (
-                        <a href={volunteer.certificateURL} target="_blank" rel="noopener noreferrer" className={styles.volunteerLink}>
-                          Certificate <ExternalLink size={14} />
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Public/Private Status */}
-            <div className={styles.visibilityStatus}>
-                {project.isPublic ? (
-                    <>
-                        <Globe size={20} className={styles.publicIcon} />
-                        <span>Public Project</span>
-                    </>
-                ) : (
-                    <>
-                        <Globe size={20} className={styles.privateIcon} />
-                        <span>Private Project</span>
-                    </>
-                )}
-                <p className={styles.visibilityDescription}>
-                    {project.isPublic ? 'This project is visible to everyone.' : 'This project is visible only to authorized users.'}
-                </p>
-            </div>
+        {project.sponsors && project.sponsors.length > 0 && (
+          <div className={styles.section}>
+            <h2>Sponsors</h2>
+            <ul className={styles.list}>
+              {project.sponsors.map((sponsor, index) => (
+                <li key={index}>
+                  {sponsor.name}
+                  {sponsor.website && ` - `}
+                  {sponsor.website && <a href={sponsor.website} target="_blank" rel="noopener noreferrer">{sponsor.website}</a>}
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+        )}
       </div>
+    </div>
     </section>
   );
 };

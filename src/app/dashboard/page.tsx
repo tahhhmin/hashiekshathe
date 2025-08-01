@@ -6,8 +6,6 @@ import Styles from './page.module.css';
 import Sidebar, { SidebarSection } from '@/ui/sidebar/Sidebar';
 import Button from '@/ui/button/Button';
 import Signup from '@/components/dashboard/volunteer/SignupTab';
-import CreateProjectForm from '@/components/dashboard/project/CreateProjectForm';
-import EditProjectForm from '@/components/dashboard/project/ManageProjects';
 
 // Dummy components for demonstration – replace these with actual ones
 const ProjectList = () => <p>Project List Content</p>;
@@ -17,16 +15,18 @@ const ViewAllVolunteers = () => <p>View All Volunteers Content</p>;
 const DepartmentA = () => <p>Department A Content</p>;
 const DepartmentB = () => <p>Department B Content</p>;
 
-
+import CreateProjectForm from '@/components/dashboard/project/CreateProjectForm';
+import CreateAnnouncementForm from '@/components/dashboard/announcement/CreateAnnouncementForm';
+import favicon from '../../../public/favicon-orange.svg'
 
 const header = {
-    logo: '/favicon.svg',
+    logo: favicon,
     title: 'Hashi Ekshathe',
     subtitle: 'Admin Panel',
 };
 
 const footer = {
-    avatar: '/favicon.svg',
+    avatar: favicon,
     name: 'Admin Name',
     email: 'admin@example.com',
     accessLevel: 'Super Admin',
@@ -47,6 +47,14 @@ const sections: SidebarSection[] = [
         items: [
             { label: 'View all volunteer', uniqueId: 'volunteer_view_all' },
             { label: 'Signup', uniqueId: 'volunteer_signup' },
+        ]
+    },
+    {
+        title: 'Announcement',
+        icon: 'Mic',
+        items: [
+            { label: 'View all', uniqueId: 'announcement_view_all' },
+            { label: 'Create', uniqueId: 'announcement_create' },
         ]
     }
 ];
@@ -73,14 +81,15 @@ export default function Page() {
     };
 
     const contentComponents: Record<string, React.ReactNode> = {
-        'project_view_list': <EditProjectForm />,
+
         'project_add_new': <CreateProjectForm />,
         'project_announcement_list': <AnnouncementList />,
-        'project_create_announcement': <CreateAnnouncement />,
+ 
+        'announcement_create': <CreateAnnouncementForm />,
+ 
         'volunteer_view_all': <ViewAllVolunteers />,
         'volunteer_signup': <Signup />,
-        'volunteer_department_a': <DepartmentA />,
-        'volunteer_department_b': <DepartmentB />,
+
         // Add more mappings as needed
     };
 
@@ -117,6 +126,7 @@ export default function Page() {
                             <p>Overview</p>
                         </div>
                     )}
+
                 </div>
             </div>
         </div>

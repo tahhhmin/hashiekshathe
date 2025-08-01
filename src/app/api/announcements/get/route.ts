@@ -1,22 +1,14 @@
-// app/api/projects/get/route.ts
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/config/connectDB';
-import Project from '@/models/Project';
+import Announcement from '@/models/Announcement';
 
 export async function GET() {
-    console.log('--- API Route /api/projects/get invoked ---'); // NEW
     try {
-        console.log('Attempting to connect to DB...'); // NEW
-        await connectDB();
-        console.log('DB connected successfully.'); // NEW
-
-        console.log('Attempting to find public projects...'); // NEW
-        const projects = await Project.find({ isPublic: true }).sort({ createdAt: -1 });
-        console.log('Found projects count:', projects.length); // NEW
-
-        return NextResponse.json(projects, { status: 200 });
+        await connectDB()
+        const  announcements = await Announcement.find().sort({ createdAt: -1 })
+        return NextResponse.json(announcements, {status: 200 })
     } catch (error: any) {
-        console.error('API Route ERROR: Unhandled exception in /api/projects/get:', error); // VERY IMPORTANT
+        console.error('API Route ERROR: Unhandled exception in /api/announcements/get:', error); // VERY IMPORTANT
         console.error('API Route ERROR Type:', typeof error); // NEW
         if (error instanceof Error) {
             console.error('API Route ERROR Message:', error.message); // NEW

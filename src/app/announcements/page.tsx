@@ -1,106 +1,133 @@
-import React from 'react'
-import Styles from './page.module.css'
-import Input from '@/ui/input/Input'
-import { Funnel } from 'lucide-react'
-import Button from '@/ui/button/Button'
+'use client';
 
-export default function page() {
+import { useState, useEffect } from 'react';
+import Styles from './page.module.css';
+import Input from '@/ui/input/Input';
+import { Funnel } from 'lucide-react'; // Renamed Link to LinkIcon to avoid conflict
+import Button from '@/ui/button/Button';
+import Link from 'next/link';
+
+// Define the interface for an announcement
+interface Announcement {
+    _id: string;
+    title: string;
+    subtitle: string;
+    links: string[];
+    description: string;
+    tags: string[];
+    createdAt: string;
+}
+
+const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    });
+};
+
+const AnnouncementsPage = () => {
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchAnnouncements = async () => {
+            try {
+                const response = await fetch('/api/announcements/get');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch announcements');
+                }
+                const data = await response.json();
+                setAnnouncements(data);
+            } catch (err: any) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAnnouncements();
+    }, []);
+
+    // Render loading state
+    if (loading) {
+        return <div className="section">Loading...</div>;
+    }
+
+    // Render error state
+    if (error) {
+        return <div className="section">Error: {error}</div>;
+    }
+
     return (
         <section className='section'>
             <div className={Styles.container}>
                 <div className={Styles.announcementContainer}>
+                    {announcements.length > 0 ? (
+                        announcements.map((announcement) => (
+                            <div key={announcement._id} className={Styles.announcementCard}>
+                                <div className={Styles.announcementCardHeader}>
+                                    <div className={Styles.announcementCardtitleContainer}>
+                                        <h2 className={Styles.announcementTitle}>{announcement.title}</h2>
+                                        {announcement.subtitle && (
+                                            <h3 className={Styles.announcementSubtitle}>{announcement.subtitle}</h3>
+                                        )}
+                                    </div>
+                                    <div className={Styles.dateContainer}>
+                                        {formatDate(announcement.createdAt)}
+                                    </div>
+                                </div>
 
+                                <div className={Styles.announcementCardContent}>
+                                    <p>{announcement.description}</p>
+                                </div>
 
+                                <div className={Styles.announcementCardFooter}>
+                                    {announcement.tags.length > 0 && (
+                                        <div className={Styles.announcementCardFooterTagContainer}>
+                                            {announcement.tags.map((tag, index) => (
+                                                <div key={index} className={Styles.announcementTag}>
+                                                    {tag}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
-                    <div className={Styles.announcementCard}>
-                        <div  className={Styles.announcementCardHeader}>
-                            <div className={Styles.announcementCardtitleContainer}>
-                                <h2 className={Styles.announcementTitle}>Announcement Title</h2>
-                                <h3 className={Styles.announcementSubtitle}>Subtitle</h3>
-                            </div>
-                            <div className={Styles.dateContainer}>7th Nov 2025</div>
-                        </div>
-
-                        <div className={Styles.announcementCardContent}>
-                            <p>Lorem ipsum dolor sit amet consectetur 
-                                adipisicing elit. Amet sed sunt commodi 
-                                quas, eligendi facere fugiat! Vel sint 
-                                nihil dicta sequi doloremque tempora 
-                                mollitia temporibus! Maiores quaerat 
-                                laborum sed placeat.
-                            </p>
-                        </div>
-
-
-
-                        <div  className={Styles.announcementCardFooter}>
-
-                            <div className={Styles.announcementCardFooterTagContainer}>
-                                <div className={Styles.announcementTag}>
-                                    Green Project
+                                    {announcement.links.length > 0 && (
+                                        <div className={Styles.announcementCardFooterButtonContainer}>
+                                            {announcement.links.map((link, index) => (
+                                                <Link key={index} href={link} passHref>
+                                                    <Button
+                                                        variant={index === 0 ? 'primary' : 'outlined'}
+                                                        label={`Link ${index + 1}`}
+                                                        showIcon
+                                                        icon='Link'
+                                                    />
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className={Styles.announcementCardFooterButtonContainer}>
-                                    <Button 
-                                    variant='primary'
-                                    label='Link1'
-                                    showIcon
-                                    icon='Link'
-                                />
-                                <Button 
-                                    variant='outlined'
-                                    label='Link2'
-                                    showIcon
-                                    icon='Link'
-                                />
-                            </div>
-
-                        </div>
-                    </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                        ))
+                    ) : (
+                        <div className={Styles.noAnnouncements}>No announcements found.</div>
+                    )}
                 </div>
                 <div className={Styles.optionContainer}>
                     <div className={Styles.optionContainerHeader}>
-                        <Funnel className={Styles.optionContainerIcon}/> <h2>Filter</h2>
+                        <Funnel className={Styles.optionContainerIcon} /> <h2>Filter</h2>
                     </div>
                     <div className={Styles.filterGroup}>
-                        <Input
-                            showIcon
-                            icon='Search'
-                            placeholder='Search'
-                        />
-                        <Input
-                            showIcon
-                            icon='Search'
-                            placeholder='Search'
-                        />
-                        <Input
-                            showIcon
-                            icon='Search'
-                            placeholder='Search'
-                        />
+                        <Input showIcon icon='Search' placeholder='Search by title' />
+                        <Input showIcon icon='Search' placeholder='Search by tag' />
                     </div>
                 </div>
             </div>
         </section>
-    )
-}
+    );
+};
+
+export default AnnouncementsPage;
