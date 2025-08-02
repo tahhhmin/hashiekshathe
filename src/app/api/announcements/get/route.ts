@@ -5,16 +5,16 @@ import Announcement from '@/models/Announcement';
 export async function GET() {
     try {
         await connectDB()
-        const  announcements = await Announcement.find().sort({ createdAt: -1 })
+        const announcements = await Announcement.find().sort({ createdAt: -1 })
         return NextResponse.json(announcements, {status: 200 })
-    } catch (error: any) {
-        console.error('API Route ERROR: Unhandled exception in /api/announcements/get:', error); // VERY IMPORTANT
-        console.error('API Route ERROR Type:', typeof error); // NEW
+    } catch (error: unknown) { // Changed 'any' to 'unknown'
+        console.error('API Route ERROR: Unhandled exception in /api/announcements/get:', error);
+        console.error('API Route ERROR Type:', typeof error);
         if (error instanceof Error) {
-            console.error('API Route ERROR Message:', error.message); // NEW
-            console.error('API Route ERROR Stack:', error.stack); // NEW
+            console.error('API Route ERROR Message:', error.message);
+            console.error('API Route ERROR Stack:', error.stack);
         } else {
-            console.error('API Route ERROR - Not an Error instance:', error); // NEW
+            console.error('API Route ERROR - Not an Error instance:', error);
         }
 
         return NextResponse.json({

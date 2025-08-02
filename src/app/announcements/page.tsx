@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Styles from './page.module.css';
 import Input from '@/ui/input/Input';
-import { Funnel } from 'lucide-react'; // Renamed Link to LinkIcon to avoid conflict
+import { Funnel } from 'lucide-react';
 import Button from '@/ui/button/Button';
 import Link from 'next/link';
 
@@ -41,8 +41,13 @@ const AnnouncementsPage = () => {
                 }
                 const data = await response.json();
                 setAnnouncements(data);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) { // Changed 'any' to 'unknown'
+                // Safely handle the error by checking its type
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError('An unknown error occurred');
+                }
             } finally {
                 setLoading(false);
             }

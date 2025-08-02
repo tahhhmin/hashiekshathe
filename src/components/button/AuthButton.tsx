@@ -35,11 +35,11 @@ export default function AuthButton() {
             try {
                 // Since the model shows a unified User schema, we should check a single endpoint
                 // Assuming you have a unified profile endpoint or adjust based on your API structure
-                const res = await fetch("/api/users/profile", { 
+                const res = await fetch("/api/users/profile", {
                     method: "GET",
                     credentials: 'include' // Ensure cookies are sent
                 });
-                
+
                 if (res.ok) {
                     const data = await res.json();
                     if (data?.data) {
@@ -50,7 +50,7 @@ export default function AuthButton() {
                 }
 
                 // Fallback: try the existing endpoints if unified endpoint doesn't exist
-                let userRes = await fetch("/api/users/profile", { method: "GET" });
+                const userRes = await fetch("/api/users/profile", { method: "GET" });
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     if (userData?.data) {
@@ -72,19 +72,18 @@ export default function AuthButton() {
                 setIsLoading(false);
             }
         }
-        
+
         checkAuth();
     }, []);
 
     const handleClick = () => {
-            router.push("/profile");
-
+        router.push("/profile");
     };
 
     // Function to generate initials for placeholder
     const getInitials = (): string => {
         if (!userData) return "?";
-        
+
         let initials = '';
         if (userData.firstName) {
             initials += userData.firstName.charAt(0).toUpperCase();
@@ -92,7 +91,7 @@ export default function AuthButton() {
         if (userData.lastName) {
             initials += userData.lastName.charAt(0).toUpperCase();
         }
-        
+
         // Fallback if no names are available
         if (initials === '') {
             if (userData.isAdmin || userData.isSuperAdmin) {
@@ -101,7 +100,7 @@ export default function AuthButton() {
                 initials = "U"; // User
             }
         }
-        
+
         return initials;
     };
 
@@ -111,7 +110,7 @@ export default function AuthButton() {
         // Different colors for different user types
         let bgColor = "cccccc";
         let textColor = "333333";
-        
+
         if (userData?.isSuperAdmin) {
             bgColor = "dc2626"; // Red for super admin
             textColor = "ffffff";
@@ -122,13 +121,13 @@ export default function AuthButton() {
             bgColor = "10b981"; // Green for regular users
             textColor = "ffffff";
         }
-        
+
         return `https://placehold.co/40x40/${bgColor}/${textColor}?text=${initials}`;
     };
 
     // Check if avatar is a problematic URL
     const isProblematicUrl = (url: string): boolean => {
-        return url.includes('drive.google.com') || 
+        return url.includes('drive.google.com') ||
                url.includes('docs.google.com') ||
                url.includes('dropbox.com/s/') ||
                url.includes('onedrive.com') ||
@@ -138,31 +137,31 @@ export default function AuthButton() {
     // Get user display name
     const getDisplayName = (): string => {
         if (!userData) return '';
-        
+
         // Use fullName if available (from virtual), otherwise construct it
         if (userData.fullName) {
             return userData.fullName;
         }
-        
+
         let name = userData.firstName;
         if (userData.middleName) {
             name += ` ${userData.middleName}`;
         }
         name += ` ${userData.lastName}`;
-        
+
         return name.trim();
     };
 
     // Get user role/title for tooltip
     const getUserRole = (): string => {
         if (!userData) return '';
-        
+
         if (userData.isSuperAdmin) {
             return 'Super Administrator';
         } else if (userData.isAdmin) {
             const adminTypeMap = {
                 recordsAdmin: 'Records Administrator',
-                volunteerAdmin: 'Volunteer Administrator', 
+                volunteerAdmin: 'Volunteer Administrator',
                 projectAdmin: 'Project Administrator',
                 educationAdmin: 'Education Administrator',
                 contactAdmin: 'Contact Administrator',
@@ -174,7 +173,7 @@ export default function AuthButton() {
             const orgType = userData.organization.type === 'team' ? 'Team' : 'Department';
             return `${orgType}: ${userData.organization.name}`;
         }
-        
+
         return 'Volunteer';
     };
 
@@ -191,7 +190,7 @@ export default function AuthButton() {
     if (isLoggedIn && userData) {
         const userRole = getUserRole();
         const displayName = getDisplayName();
-        
+
         if (shouldShowInitials) {
             // Show initials button for logged in users without valid avatar
             const initials = getInitials();

@@ -75,7 +75,7 @@ export default function Sidebar({
               </div>
 
               <div className={Styles.sidebarNavbar}>
-                {section.items.map((item, itemIdx) => (
+                {section.items.map((item) => (
                   <div key={item.uniqueId} className={Styles.sidebarNavbarItem}>
                     <div
                       className={Styles.sidebarNavbarItemOption}

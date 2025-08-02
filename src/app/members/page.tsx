@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image'; // Import Next.js Image component
 import Styles from './page.module.css';
 
 interface User {
@@ -45,11 +46,8 @@ export default function MembersPage() {
     const [showDeptMembersOnly, setShowDeptMembersOnly] = useState(false);
     const [departments, setDepartments] = useState<string[]>([]);
 
-    useEffect(() => {
-        fetchUsers();
-    }, [filterDepartment, showDeptMembersOnly]);
-
-    const fetchUsers = async () => {
+    // Memoize the fetchUsers function to prevent unnecessary re-renders of the useEffect hook.
+    const fetchUsers = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams({
@@ -74,7 +72,11 @@ export default function MembersPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterDepartment, showDeptMembersOnly]); // This is the complete dependency array
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]); // The dependency is now the memoized fetchUsers function
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -162,7 +164,13 @@ export default function MembersPage() {
                                         <div className={Styles.memberHeader}>
                                             <div className={Styles.avatar}>
                                                 {user.avatar ? (
-                                                    <img src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
+                                                    <Image
+                                                        src={user.avatar}
+                                                        alt={`${user.firstName} ${user.lastName}`}
+                                                        width={64}
+                                                        height={64}
+                                                        className={Styles.avatarImage} // Add a new class for styling the image
+                                                    />
                                                 ) : (
                                                     <div className={Styles.avatarPlaceholder}>
                                                         {user.firstName.charAt(0)}{user.lastName.charAt(0)}

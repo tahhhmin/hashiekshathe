@@ -4,25 +4,25 @@ import { connectDB } from '@/config/connectDB';
 import Project from '@/models/Project';
 
 export async function GET() {
-    console.log('--- API Route /api/projects/get invoked ---'); // NEW
+    console.log('--- API Route /api/projects/get invoked ---');
     try {
-        console.log('Attempting to connect to DB...'); // NEW
+        console.log('Attempting to connect to DB...');
         await connectDB();
-        console.log('DB connected successfully.'); // NEW
+        console.log('DB connected successfully.');
 
-        console.log('Attempting to find public projects...'); // NEW
+        console.log('Attempting to find public projects...');
         const projects = await Project.find({ isPublic: true }).sort({ createdAt: -1 });
-        console.log('Found projects count:', projects.length); // NEW
+        console.log('Found projects count:', projects.length);
 
         return NextResponse.json(projects, { status: 200 });
-    } catch (error: any) {
-        console.error('API Route ERROR: Unhandled exception in /api/projects/get:', error); // VERY IMPORTANT
-        console.error('API Route ERROR Type:', typeof error); // NEW
+    } catch (error: unknown) { // Changed 'any' to 'unknown'
+        console.error('API Route ERROR: Unhandled exception in /api/projects/get:', error);
+        console.error('API Route ERROR Type:', typeof error);
         if (error instanceof Error) {
-            console.error('API Route ERROR Message:', error.message); // NEW
-            console.error('API Route ERROR Stack:', error.stack); // NEW
+            console.error('API Route ERROR Message:', error.message);
+            console.error('API Route ERROR Stack:', error.stack);
         } else {
-            console.error('API Route ERROR - Not an Error instance:', error); // NEW
+            console.error('API Route ERROR - Not an Error instance:', error);
         }
 
         return NextResponse.json({

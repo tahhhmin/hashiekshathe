@@ -6,7 +6,6 @@ import Button from '@/ui/button/Button'
 import { useRouter } from 'next/navigation';
 
 import Input from '@/ui/input/Input';
-import Textarea from '@/ui/input/Textarea';
 import LogoutButton from '../button/LogoutButton';
 import HorizontalDivider from '../../ui/dividers/HorizontalDivider';
 
@@ -400,10 +399,7 @@ export default function ProfileSettingsTab() {
             </div>
         );
     }
-
-    const firstNameInitial = userData.firstName ? userData.firstName.charAt(0).toUpperCase() : '';
-    const lastNameInitial = userData.lastName ? userData.lastName.charAt(0).toUpperCase() : '';
-
+    
     const formattedDateJoined = userData?.dateJoined
         ? new Date(userData.dateJoined).toLocaleDateString("en-GB", {
             day: "numeric",

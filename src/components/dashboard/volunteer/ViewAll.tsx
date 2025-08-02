@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, Edit, UserCheck, UserX, Shield, Crown, Calendar, Mail, Phone, Building, MapPin, X, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Edit, UserCheck, UserX, Shield, Crown, Calendar, Mail, Building, X, AlertCircle, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 
 interface SocialMedia {
   facebook?: string;
@@ -82,7 +83,7 @@ export default function AdminUsersPage() {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [successMessage, setSuccessMessage] = useState('');
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -109,11 +110,11 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, search, filter, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, search, filter, sortBy, sortOrder]);
+  }, [fetchUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +132,7 @@ export default function AdminUsersPage() {
     setErrors({});
   };
 
-  const handleInputChange = (field: keyof EditingUser, value: any) => {
+  const handleInputChange = (field: keyof EditingUser, value: string | boolean) => {
     if (!editingUser) return;
     
     setEditingUser(prev => ({
@@ -256,7 +257,7 @@ export default function AdminUsersPage() {
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
-    const pages = [];
+    const pages: (number | string)[] = [];
     const totalPages = pagination.totalPages;
     const current = pagination.currentPage;
     
@@ -402,7 +403,13 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {user.avatar ? (
-                          <img src={user.avatar} alt={`${user.fullName}'s avatar`} className="w-8 h-8 rounded-full object-cover" />
+                          <Image 
+                            src={user.avatar} 
+                            alt={`${user.fullName}'s avatar`} 
+                            width={32}
+                            height={32}
+                            className="rounded-full object-cover" 
+                          />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm font-medium">
                             {user.firstName[0]}{user.lastName[0]}

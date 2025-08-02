@@ -14,6 +14,7 @@ interface Project {
     location: {
         city: string;
         division?: string;
+        country?: string; // Added 'country' to match the mapping below
     };
     description: string;
     tags: string[];
@@ -35,7 +36,7 @@ const ProjectsPage = async () => {
 
         // Convert MongoDB documents to plain objects using JSON.parse(JSON.stringify())
         // This removes all MongoDB-specific methods and properties
-        projects = JSON.parse(JSON.stringify(rawProjects)).map((project: any) => ({
+        projects = JSON.parse(JSON.stringify(rawProjects)).map((project: Project) => ({
             _id: project._id,
             name: project.name,
             slug: project.slug,
@@ -43,7 +44,7 @@ const ProjectsPage = async () => {
             location: {
                 city: project.location.city,
                 division: project.location.division,
-                country: project.location.country // Ensure country is mapped
+                country: project.location.country
             },
             description: project.description,
             tags: project.tags
@@ -67,11 +68,10 @@ const ProjectsPage = async () => {
 
                     <div className={styles.content}>
                         <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                             Iure harum nobis placeat, facere, odit mollitia velit illo 
-                             dolor temporibus pariatur officia magni eius nihil accusamus 
-                             excepturi. Expedita quis facilis aliquid?
-                             
-                            </p>
+                            Iure harum nobis placeat, facere, odit mollitia velit illo
+                            dolor temporibus pariatur officia magni eius nihil accusamus
+                            excepturi. Expedita quis facilis aliquid?
+                        </p>
                     </div>
                 </div>
 
@@ -90,7 +90,7 @@ const ProjectsPage = async () => {
 
                     {projects.length > 0 && (
                         <div className={styles.projectGrid}>
-                            {projects.map((project) => (
+                            {projects.map((project: Project) => (
                                 <ProjectCard
                                     key={project._id}
                                     project={project}

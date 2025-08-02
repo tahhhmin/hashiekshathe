@@ -1,6 +1,7 @@
+// app/api/users/search/route.ts
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/config/connectDB';
-import User from '@/models/User'; // Ensure this path is correct based on your project structure
+import User from '@/models/User';
 
 export async function GET(req: Request) {
   await connectDB();
@@ -23,9 +24,11 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(users, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching users:', error);
-    return NextResponse.json({ message: 'Internal Server Error', error: error.message }, { status: 500 });
+    // You can check the error type and return a more specific message if needed.
+    // For now, let's return a generic message and log the full error.
+    return NextResponse.json({ message: 'Internal Server Error', error: (error as Error).message }, { status: 500 });
   }
 }
 
@@ -33,4 +36,3 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
 }
-// ... similarly for PUT, DELETE if you don't intend to support them

@@ -35,8 +35,9 @@ const UserSearchModal: React.FC<UserSearchModalProps> = ({ onSelectUser, onClose
         }
         const data = await response.json();
         setUsers(data);
-      } catch (err: any) {
-        setError(err.message || 'An unknown error occurred while fetching users.');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred while fetching users.';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -84,7 +85,7 @@ const UserSearchModal: React.FC<UserSearchModalProps> = ({ onSelectUser, onClose
           {loading && <p className={styles.statusMessage}>Loading users...</p>}
           {error && <p className={styles.errorMessage}>{error}</p>}
           {!loading && !error && users.length === 0 && searchTerm.length >= 2 && (
-            <p className={styles.statusMessage}>No users found for "{searchTerm}".</p>
+            <p className={styles.statusMessage}>No users found for &quot;{searchTerm}&quot;.</p>
           )}
           {!loading && !error && users.length === 0 && searchTerm.length < 2 && (
             <p className={styles.statusMessage}>Type at least 2 characters to search for users.</p>

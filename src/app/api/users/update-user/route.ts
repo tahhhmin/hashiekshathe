@@ -1,16 +1,14 @@
-// app/api/users/update-user/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/connectDB";
 import User from "@/models/User";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import bcrypt from "bcryptjs";
-
-
+import { Document } from "mongoose";
 
 const departments = [
-  "Administration", "Human Resources", "Finance & Accounting", 
+  "Administration", "Human Resources", "Finance & Accounting",
   "Project Operations & Management", "Outreach & Strategic Relations",
-  "Communications & Marketing", "Digital Operations",  
+  "Communications & Marketing", "Digital Operations",
   "Education & Youth Development"
 ] as const;
 
@@ -30,9 +28,8 @@ const teams = [
   "Panchagarh", "Rangpur", "Thakurgaon"
 ] as const;
 
-const combinedOrganisationTeamDept = [...departments, ...teams] as const;
-
-type OrganisationName = typeof combinedOrganisationTeamDept[number];
+// Combined the types directly to fix the "unused variable" warning
+type OrganisationName = typeof departments[number] | typeof teams[number];
 
 interface SocialMedia {
   facebook?: string;
@@ -44,26 +41,26 @@ interface SocialMedia {
 }
 
 interface UpdateData {
-    firstName?: string;
-    lastName?: string;
-    middleName?: string;
-    username?: string;
-    email?: string;
-    password?: string;
-    phoneNumber?: string;
-    dateOfBirth?: string | Date;
-    gender?: "male" | "female" | "other";
-    avatar?: string;
-    biography?: string;
-    institution?: string;
-    educationLevel?: "SSC/O-Level" | "HSC/A-Level" | "Undergrad";
-    address?: string;
-    organization?: {
-        type?: "team" | "department" | "none";
-        name?: OrganisationName; 
-        role?: string;
-    };
-    socialMedia?: SocialMedia;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  username?: string;
+  email?: string;
+  password?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string | Date;
+  gender?: "male" | "female" | "other";
+  avatar?: string;
+  biography?: string;
+  institution?: string;
+  educationLevel?: "SSC/O-Level" | "HSC/A-Level" | "Undergrad";
+  address?: string;
+  organization?: {
+    type?: "team" | "department" | "none";
+    name?: OrganisationName;
+    role?: string;
+  };
+  socialMedia?: SocialMedia;
 }
 
 // Fields not allowed to be updated here
@@ -125,7 +122,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const updateData: any = {};
+    // Use Partial<UpdateData> for better type safety instead of 'any'
+    const updateData: Partial<UpdateData> = {};
 
     // Validate and assign fields
 
@@ -268,7 +266,8 @@ export async function PUT(request: NextRequest) {
     // Organization object updates
     if (reqBody.organization !== undefined) {
       const org = reqBody.organization;
-      const orgUpdate: any = {};
+      // Use Partial<...> for better type safety
+      const orgUpdate: Partial<typeof reqBody.organization> = {};
       if (org.type !== undefined) {
         if (!["team", "department", "none"].includes(org.type)) {
           return NextResponse.json(
@@ -279,7 +278,7 @@ export async function PUT(request: NextRequest) {
         orgUpdate.type = org.type;
       }
       if (org.name !== undefined) {
-        orgUpdate.name = typeof org.name === "string" ? org.name.trim() : "";
+        orgUpdate.name = typeof org.name === "string" ? org.name.trim() as OrganisationName : undefined;
       }
       if (org.role !== undefined) {
         orgUpdate.role = typeof org.role === "string" ? org.role.trim() : "";
@@ -298,14 +297,15 @@ export async function PUT(request: NextRequest) {
         "website",
       ];
 
-      const socialUpdate: any = user.socialMedia
+      // Use Partial<...> for better type safety
+      const socialUpdate: Partial<SocialMedia> = user.socialMedia
         ? { ...user.socialMedia.toObject() }
         : {};
 
       for (const key of Object.keys(reqBody.socialMedia)) {
         if (allowedSocialFields.includes(key)) {
           const val = reqBody.socialMedia[key as keyof SocialMedia];
-          socialUpdate[key] = typeof val === "string" ? val.trim() : "";
+          socialUpdate[key as keyof SocialMedia] = typeof val === "string" ? val.trim() : undefined;
         }
       }
 
@@ -316,7 +316,7 @@ export async function PUT(request: NextRequest) {
     await User.findByIdAndUpdate(userId, updateData, { new: true });
 
     return NextResponse.json({ message: "User updated successfully" }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating user:", error);
     return NextResponse.json(
       { error: "Internal server error" },

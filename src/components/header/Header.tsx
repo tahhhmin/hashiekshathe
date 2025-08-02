@@ -76,7 +76,6 @@ const navItems: NavItem[] = [
 export default function Header() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const checkAdminStatus = async () => {
@@ -100,8 +99,6 @@ export default function Header() {
                 console.error('Error checking admin status:', error);
                 setIsLoggedIn(false);
                 setIsAdmin(false);
-            } finally {
-                setIsLoading(false);
             }
         };
 

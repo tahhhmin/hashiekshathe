@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Build search query
-    let searchQuery: any = {};
+    // Build search query using 'const' and a more specific type
+    const searchQuery: Record<string, unknown> = {};
     if (search) {
       searchQuery.$or = [
         { firstName: { $regex: search, $options: 'i' } },
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Build sort object
-    const sortObj: any = {};
+    // Build sort object with a specific type
+    const sortObj: Record<string, 1 | -1> = {};
     sortObj[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     // Fetch users from DB with pagination
@@ -97,10 +97,10 @@ export async function GET(request: NextRequest) {
         }
       }
     });
-  } catch (error) {
+  } catch (error: unknown) { // Using 'unknown' for better type safety
     console.error("Error fetching users:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }

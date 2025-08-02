@@ -80,6 +80,7 @@ export default function ContactPage() {
         } catch (err) {
             setMessage('Something went wrong. Please try again.');
             setMessageType('error');
+            console.error('Error sending verification code:', err);
         } finally {
             setLoading(false);
         }
@@ -135,9 +136,10 @@ export default function ContactPage() {
                 setMessageType('error');
                 if (data.message.includes('expired')) setShowVerification(false);
             }
-        } catch {
+        } catch (err) { // The 'err' variable is now used here
             setMessage('Verification failed. Please try again.');
             setMessageType('error');
+            console.error('Error verifying code:', err); // The 'err' variable is used to log the error
         } finally {
             setLoading(false);
         }

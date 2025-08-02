@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, MapPin, Tag, Users, Building2, DollarSign, Image, FileText, Globe, Eye, EyeOff } from 'lucide-react';
-import styles from './CreateProjectForm.module.css'; // Import the CSS module
-import UserSearchModal from './UserSearchModal'; // Import the new modal component
+import styles from './CreateProjectForm.module.css';
+import UserSearchModal from './UserSearchModal';
 
 // Interfaces for form data structure
 interface LocationData {
   city: string;
-  division?: string; // Optional as per backend validation (can be empty string)
+  division?: string;
 }
 
 interface ImpactData {
@@ -21,7 +21,7 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
-  username: string; // Often used for user ID in frontend
+  username: string;
 }
 
 interface VolunteerData {
@@ -48,7 +48,7 @@ interface ProjectFormData {
   name: string;
   location: LocationData;
   startDate: string;
-  endDate?: string; // Optional
+  endDate?: string;
   description: string;
   tags: string[];
   thumbnailURL: string;
@@ -85,22 +85,23 @@ const CreateProjectForm: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [showUserSearchModal, setShowUserSearchModal] = useState(false); // State to control modal visibility
+  const [showUserSearchModal, setShowUserSearchModal] = useState(false);
 
   // Generic handler for input changes, including nested objects (e.g., location.city)
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => {
+      const updatedData = { ...prev };
       if (field.includes('.')) {
-        const [parent, child] = field.split('.');
-        return {
-          ...prev,
-          [parent]: {
-            ...(prev[parent as keyof ProjectFormData] as any),
-            [child]: value
-          }
-        };
+        const [parent, child] = field.split('.') as [keyof ProjectFormData, string];
+        // Safely access the nested object and update the child property
+        if (updatedData[parent] && typeof updatedData[parent] === 'object' && child) {
+          (updatedData[parent] as any)[child] = value;
+        }
+      } else {
+        // Update top-level property
+        (updatedData as any)[field] = value;
       }
-      return { ...prev, [field]: value };
+      return updatedData;
     });
   };
 
@@ -139,7 +140,7 @@ const CreateProjectForm: React.FC = () => {
       ...prev,
       [field]: prev[field].map((item, i) =>
         i === index ? { ...item, [subField]: value } : item
-      )
+      ) as T[]
     }));
   };
 
@@ -173,8 +174,6 @@ const CreateProjectForm: React.FC = () => {
     }));
   };
 
-  // --- Volunteer Logic Changes ---
-
   const handleOpenUserSearchModal = () => {
     setShowUserSearchModal(true);
   };
@@ -183,10 +182,8 @@ const CreateProjectForm: React.FC = () => {
     setShowUserSearchModal(false);
   };
 
-  // Callback when a user is selected from the modal
   const handleUserSelectedAsVolunteer = (user: User) => {
     setFormData(prev => {
-      // Check if the user is already added as a volunteer
       const isAlreadyVolunteer = prev.volunteers.some(
         (v) => v.volunteerUserID === user._id
       );
@@ -196,22 +193,21 @@ const CreateProjectForm: React.FC = () => {
         return prev;
       }
 
+      const newVolunteer: VolunteerData = {
+        volunteerUserID: user._id,
+        volunteerEmail: user.email,
+        volunteeringHours: 0,
+        certificateURL: '',
+        impactDescription: '',
+      };
+
       return {
         ...prev,
-        volunteers: [
-          ...prev.volunteers,
-          {
-            volunteerUserID: user._id, // Use _id from backend
-            volunteerEmail: user.email,
-            volunteeringHours: 0, // Default or leave empty for later input
-            certificateURL: '',
-            impactDescription: '',
-          },
-        ],
+        volunteers: [...prev.volunteers, newVolunteer],
       };
     });
-    setMessage(null); // Clear previous message if successful add
-    handleCloseUserSearchModal(); // Close modal after selection
+    setMessage(null);
+    handleCloseUserSearchModal();
   };
 
   const removeVolunteer = (index: number) => {
@@ -221,8 +217,6 @@ const CreateProjectForm: React.FC = () => {
     }));
   };
 
-  // --- End Volunteer Logic Changes ---
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,14 +224,11 @@ const CreateProjectForm: React.FC = () => {
     setMessage(null);
 
     try {
-      // Clean data before sending: filter out empty string inputs from arrays
       const cleanedData = {
         ...formData,
         tags: formData.tags.filter(tag => tag.trim() !== ''),
         collaborators: formData.collaborators.filter(collab => collab.name.trim() !== ''),
         sponsors: formData.sponsors.filter(sponsor => sponsor.name.trim() !== ''),
-        // Volunteers already contain selected data, no need to filter by email trim
-        // as email and userID are pre-filled from selection.
       };
 
       const response = await fetch('/api/projects/create', {
@@ -248,9 +239,8 @@ const CreateProjectForm: React.FC = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (response.ok) { // Check for successful response status code
         setMessage({ type: 'success', text: result.message });
-        // Reset form to initial state after successful submission
         setFormData({
           name: '',
           location: { city: '', division: '' },
@@ -270,7 +260,7 @@ const CreateProjectForm: React.FC = () => {
           isPublic: true
         });
       } else {
-        setMessage({ type: 'error', text: result.message });
+        setMessage({ type: 'error', text: result.message || 'An unexpected error occurred.' });
       }
     } catch (error) {
       console.error('Submission error:', error);
@@ -300,12 +290,9 @@ const CreateProjectForm: React.FC = () => {
             <FileText className={styles.icon} />
             Basic Information
           </h2>
-
           <div className={styles.grid2Col}>
             <div>
-              <label className={styles.label}>
-                Project Name *
-              </label>
+              <label className={styles.label}>Project Name *</label>
               <input
                 type="text"
                 value={formData.name}
@@ -317,11 +304,8 @@ const CreateProjectForm: React.FC = () => {
               />
               <p className={styles.charCount}>{formData.name.length}/100 characters</p>
             </div>
-
             <div>
-              <label className={styles.label}>
-                Status
-              </label>
+              <label className={styles.label}>Status</label>
               <select
                 value={formData.status}
                 onChange={(e) => handleInputChange('status', e.target.value as 'Upcoming' | 'Ongoing' | 'Completed')}
@@ -332,11 +316,8 @@ const CreateProjectForm: React.FC = () => {
                 <option value="Completed">Completed</option>
               </select>
             </div>
-
             <div className={styles.colSpan2}>
-              <label className={styles.label}>
-                Description *
-              </label>
+              <label className={styles.label}>Description *</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
@@ -357,12 +338,9 @@ const CreateProjectForm: React.FC = () => {
             <MapPin className={styles.icon} />
             Location & Timeline
           </h2>
-
           <div className={styles.grid3Col}>
             <div>
-              <label className={styles.label}>
-                City *
-              </label>
+              <label className={styles.label}>City *</label>
               <input
                 type="text"
                 value={formData.location.city}
@@ -372,11 +350,8 @@ const CreateProjectForm: React.FC = () => {
                 required
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                Division
-              </label>
+              <label className={styles.label}>Division</label>
               <input
                 type="text"
                 value={formData.location.division || ''}
@@ -385,11 +360,8 @@ const CreateProjectForm: React.FC = () => {
                 placeholder="Enter division"
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                Start Date *
-              </label>
+              <label className={styles.label}>Start Date *</label>
               <input
                 type="date"
                 value={formData.startDate}
@@ -398,11 +370,8 @@ const CreateProjectForm: React.FC = () => {
                 required
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                End Date
-              </label>
+              <label className={styles.label}>End Date</label>
               <input
                 type="date"
                 value={formData.endDate || ''}
@@ -419,7 +388,6 @@ const CreateProjectForm: React.FC = () => {
             <Tag className={styles.icon} />
             Tags
           </h2>
-
           {formData.tags.map((tag, index) => (
             <div key={index} className={styles.arrayItem}>
               <input
@@ -441,7 +409,6 @@ const CreateProjectForm: React.FC = () => {
               )}
             </div>
           ))}
-
           <button
             type="button"
             onClick={() => addArrayItem('tags')}
@@ -458,12 +425,9 @@ const CreateProjectForm: React.FC = () => {
             <Image className={styles.icon} />
             Media & Documents
           </h2>
-
           <div className={styles.spacingY4}>
             <div>
-              <label className={styles.label}>
-                Thumbnail URL *
-              </label>
+              <label className={styles.label}>Thumbnail URL *</label>
               <input
                 type="url"
                 value={formData.thumbnailURL}
@@ -473,11 +437,8 @@ const CreateProjectForm: React.FC = () => {
                 required
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                Banner URL *
-              </label>
+              <label className={styles.label}>Banner URL *</label>
               <input
                 type="url"
                 value={formData.bannerURL}
@@ -487,11 +448,8 @@ const CreateProjectForm: React.FC = () => {
                 required
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                Gallery Spreadsheet URL *
-              </label>
+              <label className={styles.label}>Gallery Spreadsheet URL *</label>
               <input
                 type="url"
                 value={formData.gallerySpreadsheetURL}
@@ -501,11 +459,8 @@ const CreateProjectForm: React.FC = () => {
                 required
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                Financial Record URL *
-              </label>
+              <label className={styles.label}>Financial Record URL *</label>
               <input
                 type="url"
                 value={formData.financialRecordURL}
@@ -524,12 +479,9 @@ const CreateProjectForm: React.FC = () => {
             <Users className={styles.icon} />
             Impact Metrics
           </h2>
-
           <div className={styles.grid3Col}>
             <div>
-              <label className={styles.label}>
-                People Served
-              </label>
+              <label className={styles.label}>People Served</label>
               <input
                 type="number"
                 min="0"
@@ -538,11 +490,8 @@ const CreateProjectForm: React.FC = () => {
                 className={styles.input}
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                Volunteers Engaged
-              </label>
+              <label className={styles.label}>Volunteers Engaged</label>
               <input
                 type="number"
                 min="0"
@@ -551,11 +500,8 @@ const CreateProjectForm: React.FC = () => {
                 className={styles.input}
               />
             </div>
-
             <div>
-              <label className={styles.label}>
-                Materials Distributed
-              </label>
+              <label className={styles.label}>Materials Distributed</label>
               <input
                 type="number"
                 min="0"
@@ -573,12 +519,10 @@ const CreateProjectForm: React.FC = () => {
             <Users className={styles.icon} />
             Volunteers
           </h2>
-
           {formData.volunteers.map((volunteer, index) => (
             <div key={index} className={styles.nestedFormItem}>
               <div className={styles.nestedFormHeader}>
                 <h3 className={styles.nestedFormTitle}>
-                  {/* Display selected volunteer's name/email */}
                   Volunteer: {volunteer.volunteerEmail}
                 </h3>
                 <button
@@ -589,9 +533,7 @@ const CreateProjectForm: React.FC = () => {
                   <Trash2 className={styles.iconSmall} />
                 </button>
               </div>
-
               <div className={styles.grid2Col}>
-                {/* These fields are now read-only, populated from selection */}
                 <div>
                   <label className={styles.label}>Volunteer User ID</label>
                   <input
@@ -599,7 +541,7 @@ const CreateProjectForm: React.FC = () => {
                     value={volunteer.volunteerUserID}
                     className={styles.input}
                     readOnly
-                    disabled // Disable direct input
+                    disabled
                   />
                 </div>
                 <div>
@@ -609,7 +551,7 @@ const CreateProjectForm: React.FC = () => {
                     value={volunteer.volunteerEmail}
                     className={styles.input}
                     readOnly
-                    disabled // Disable direct input
+                    disabled
                   />
                 </div>
                 <div>
@@ -646,10 +588,9 @@ const CreateProjectForm: React.FC = () => {
               </div>
             </div>
           ))}
-
           <button
             type="button"
-            onClick={handleOpenUserSearchModal} // This button opens the modal
+            onClick={handleOpenUserSearchModal}
             className={styles.addButton}
           >
             <Plus className={styles.iconSmall} />
@@ -657,14 +598,12 @@ const CreateProjectForm: React.FC = () => {
           </button>
         </div>
 
-
         {/* Collaborators */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
             <Building2 className={styles.icon} />
             Collaborators
           </h2>
-
           {formData.collaborators.map((collaborator, index) => (
             <div key={index} className={styles.nestedFormItem}>
               <div className={styles.nestedFormHeader}>
@@ -677,7 +616,6 @@ const CreateProjectForm: React.FC = () => {
                   <Trash2 className={styles.iconSmall} />
                 </button>
               </div>
-
               <div className={styles.grid3Col}>
                 <div>
                   <label className={styles.label}>Name *</label>
@@ -690,7 +628,6 @@ const CreateProjectForm: React.FC = () => {
                     required
                   />
                 </div>
-
                 <div>
                   <label className={styles.label}>Logo URL</label>
                   <input
@@ -701,7 +638,6 @@ const CreateProjectForm: React.FC = () => {
                     placeholder="https://example.com/logo.png"
                   />
                 </div>
-
                 <div>
                   <label className={styles.label}>Website</label>
                   <input
@@ -715,7 +651,6 @@ const CreateProjectForm: React.FC = () => {
               </div>
             </div>
           ))}
-
           <button
             type="button"
             onClick={addCollaborator}
@@ -732,7 +667,6 @@ const CreateProjectForm: React.FC = () => {
             <DollarSign className={styles.icon} />
             Sponsors
           </h2>
-
           {formData.sponsors.map((sponsor, index) => (
             <div key={index} className={styles.nestedFormItem}>
               <div className={styles.nestedFormHeader}>
@@ -745,7 +679,6 @@ const CreateProjectForm: React.FC = () => {
                   <Trash2 className={styles.iconSmall} />
                 </button>
               </div>
-
               <div className={styles.grid3Col}>
                 <div>
                   <label className={styles.label}>Name *</label>
@@ -758,7 +691,6 @@ const CreateProjectForm: React.FC = () => {
                     required
                   />
                 </div>
-
                 <div>
                   <label className={styles.label}>Logo URL</label>
                   <input
@@ -769,7 +701,6 @@ const CreateProjectForm: React.FC = () => {
                     placeholder="https://example.com/logo.png"
                   />
                 </div>
-
                 <div>
                   <label className={styles.label}>Website</label>
                   <input
@@ -783,7 +714,6 @@ const CreateProjectForm: React.FC = () => {
               </div>
             </div>
           ))}
-
           <button
             type="button"
             onClick={addSponsor}
@@ -800,7 +730,6 @@ const CreateProjectForm: React.FC = () => {
             <Globe className={styles.icon} />
             Project Settings
           </h2>
-
           <div className={styles.toggleContainer}>
             <button
               type="button"
@@ -848,7 +777,6 @@ const CreateProjectForm: React.FC = () => {
           >
             Reset Form
           </button>
-
           <button
             type="submit"
             disabled={loading}

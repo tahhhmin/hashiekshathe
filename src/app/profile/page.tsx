@@ -35,19 +35,11 @@ interface UserData {
     dateJoined?: string;
 }
 
-// FormErrors interface is still useful if your ProfileProfileTab uses it internally
-interface FormErrors {
-    [key: string]: string;
-}
-
 export default function UserProfilePage() {
     const router = useRouter();
     const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
-    // Removed unused state variables: updating, isEditing, editData, errors, successMessage
-    // These should ideally be managed within the respective tab components if they handle editing.
-    // For this example, I'm assuming ProfileProfileTab will manage its own edit state.
-
+    
     const [activeTab, setActiveTab] = useState<'profile' | 'involvement' | 'notifications' | 'settings'>('profile');
 
     useEffect(() => {
@@ -74,10 +66,6 @@ export default function UserProfilePage() {
         fetchUserProfile();
     }, [router]);
 
-    // Removed unused functions: validateForm, handleInputChange, handleSave, handleCancel, handleLogout
-    // These functions were not called within this component and are likely intended for ProfileProfileTab
-    // or other specific tab components. Each tab component should manage its own logic.
-
     if (loading || !userData) {
         return (
             <div className={styles.loadingContainer}>
@@ -92,10 +80,10 @@ export default function UserProfilePage() {
 
     const formattedDateJoined = userData?.dateJoined
         ? new Date(userData.dateJoined).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        })
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+          })
         : "N/A";
 
     // Function to transform Google Drive view link to direct download link
@@ -220,10 +208,6 @@ export default function UserProfilePage() {
                 {activeTab === 'settings' && (
                     <ProfileAccountTab />
                 )}
-
-                {/* Removed success and error messages from UserProfilePage
-                    as they are typically managed by the specific tab components
-                    that handle updates (e.g., ProfileProfileTab) */}
             </div>
         </section>
     );
