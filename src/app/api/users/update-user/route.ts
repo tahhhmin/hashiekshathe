@@ -1,9 +1,14 @@
+// ./src/app/api/users/update-user/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/connectDB";
-import User from "@/models/User";
+import User, { IUser } from "@/models/User"; // Import IUser interface
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import bcrypt from "bcryptjs";
-import { Document } from "mongoose";
+
+// ---
+// ## Type Definitions
+// ---
 
 const departments = [
   "Administration", "Human Resources", "Finance & Accounting",
@@ -28,7 +33,6 @@ const teams = [
   "Panchagarh", "Rangpur", "Thakurgaon"
 ] as const;
 
-// Combined the types directly to fix the "unused variable" warning
 type OrganisationName = typeof departments[number] | typeof teams[number];
 
 interface SocialMedia {
@@ -122,11 +126,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Use Partial<UpdateData> for better type safety instead of 'any'
-    const updateData: Partial<UpdateData> = {};
+    const updateData: Partial<IUser> = {};
 
     // Validate and assign fields
-
     if (reqBody.firstName !== undefined) {
       if (typeof reqBody.firstName !== "string" || reqBody.firstName.trim() === "") {
         return NextResponse.json(
@@ -233,7 +235,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (reqBody.biography !== undefined) {
-        updateData.biography = reqBody.biography?.trim() || " "
+      updateData.biography = reqBody.biography?.trim() || ""; // Use empty string for empty bio
     }
 
     if (reqBody.institution !== undefined) {
@@ -266,7 +268,6 @@ export async function PUT(request: NextRequest) {
     // Organization object updates
     if (reqBody.organization !== undefined) {
       const org = reqBody.organization;
-      // Use Partial<...> for better type safety
       const orgUpdate: Partial<typeof reqBody.organization> = {};
       if (org.type !== undefined) {
         if (!["team", "department", "none"].includes(org.type)) {
@@ -278,7 +279,11 @@ export async function PUT(request: NextRequest) {
         orgUpdate.type = org.type;
       }
       if (org.name !== undefined) {
-        orgUpdate.name = typeof org.name === "string" ? org.name.trim() as OrganisationName : undefined;
+        const combined = [...departments, ...teams];
+        if (!combined.includes(org.name as any)) {
+            return NextResponse.json({ error: "Invalid organization name" }, { status: 400 });
+        }
+        orgUpdate.name = org.name;
       }
       if (org.role !== undefined) {
         orgUpdate.role = typeof org.role === "string" ? org.role.trim() : "";
@@ -296,8 +301,7 @@ export async function PUT(request: NextRequest) {
         "github",
         "website",
       ];
-
-      // Use Partial<...> for better type safety
+      
       const socialUpdate: Partial<SocialMedia> = user.socialMedia
         ? { ...user.socialMedia.toObject() }
         : {};
@@ -305,19 +309,28 @@ export async function PUT(request: NextRequest) {
       for (const key of Object.keys(reqBody.socialMedia)) {
         if (allowedSocialFields.includes(key)) {
           const val = reqBody.socialMedia[key as keyof SocialMedia];
-          socialUpdate[key as keyof SocialMedia] = typeof val === "string" ? val.trim() : undefined;
+          if (typeof val === "string") {
+            socialUpdate[key as keyof SocialMedia] = val.trim();
+          } else if (val === null) {
+            socialUpdate[key as keyof SocialMedia] = "";
+          }
         }
       }
-
       updateData.socialMedia = socialUpdate;
     }
 
     // Update the user
-    await User.findByIdAndUpdate(userId, updateData, { new: true });
+    await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true });
 
     return NextResponse.json({ message: "User updated successfully" }, { status: 200 });
   } catch (error: unknown) {
     console.error("Error updating user:", error);
+    if (error instanceof Error) {
+        return NextResponse.json(
+            { error: "Internal server error", details: error.message },
+            { status: 500 }
+        );
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

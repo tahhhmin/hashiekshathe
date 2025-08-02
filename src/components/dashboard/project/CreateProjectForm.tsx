@@ -87,19 +87,21 @@ const CreateProjectForm: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showUserSearchModal, setShowUserSearchModal] = useState(false);
 
-  // Generic handler for input changes, including nested objects (e.g., location.city)
-  const handleInputChange = (field: string, value: string | number | boolean) => {
+  // Corrected handler to use a type assertion for keyof ProjectFormData
+  const handleInputChange = (field: keyof ProjectFormData | `location.${keyof LocationData}` | `impact.${keyof ImpactData}`, value: string | number | boolean) => {
     setFormData(prev => {
       const updatedData = { ...prev };
       if (field.includes('.')) {
         const [parent, child] = field.split('.') as [keyof ProjectFormData, string];
-        // Safely access the nested object and update the child property
-        if (updatedData[parent] && typeof updatedData[parent] === 'object' && child) {
-          (updatedData[parent] as any)[child] = value;
+        // Ensure parent is a valid key for a nested object and child exists
+        if (parent === 'location' || parent === 'impact') {
+          // Asserting the nested object type for type safety
+          const nestedObj = updatedData[parent] as LocationData | ImpactData;
+          (nestedObj as any)[child] = value;
         }
       } else {
-        // Update top-level property
-        (updatedData as any)[field] = value;
+        // Update top-level property with correct type
+        (updatedData as any)[field as keyof ProjectFormData] = value;
       }
       return updatedData;
     });

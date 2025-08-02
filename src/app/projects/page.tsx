@@ -23,7 +23,7 @@ interface Project {
 // This is a Server Component - fetch data directly from the database
 const ProjectsPage = async () => {
     let projects: Project[] = [];
-    let error = null;
+    let error: string | null = null; // Correctly type the error variable
 
     try {
         console.log('ProjectsPage: Attempting to connect to DB...');
@@ -31,28 +31,23 @@ const ProjectsPage = async () => {
         console.log('ProjectsPage: DB connected successfully.');
 
         console.log('ProjectsPage: Attempting to find public projects...');
-        const rawProjects = await Project.find({ isPublic: true }).sort({ createdAt: -1 });
+        const rawProjects = await Project.find({ isPublic: true }).sort({ createdAt: -1 }).lean(); // Using .lean() for performance
         console.log('ProjectsPage: Found projects count:', rawProjects.length);
 
         // Convert MongoDB documents to plain objects using JSON.parse(JSON.stringify())
-        // This removes all MongoDB-specific methods and properties
-        projects = JSON.parse(JSON.stringify(rawProjects)).map((project: Project) => ({
-            _id: project._id,
-            name: project.name,
-            slug: project.slug,
-            thumbnailURL: project.thumbnailURL,
-            location: {
-                city: project.location.city,
-                division: project.location.division,
-                country: project.location.country
-            },
-            description: project.description,
-            tags: project.tags
-        }));
+        // This removes all MongoDB-specific methods and properties, which is necessary for server components
+        // and passing data down to client components.
+        projects = JSON.parse(JSON.stringify(rawProjects));
 
-    } catch (err: any) {
+    } catch (err: unknown) { // Change 'any' to 'unknown' for type safety
         console.error("ProjectsPage: Error fetching projects:", err);
-        error = err.message || 'Failed to fetch projects';
+        
+        // Use a type guard to safely check the error object
+        if (err instanceof Error) {
+            error = err.message || 'Failed to fetch projects';
+        } else {
+            error = 'An unexpected error occurred';
+        }
     }
 
     return (
