@@ -1,4 +1,3 @@
-// app/login-combined/page.tsx
 'use client';
 
 import React, { useState, ChangeEvent, FormEvent } from 'react';
@@ -69,9 +68,10 @@ export default function CombinedLoginPage() {
                 setLoading(false);
             }
         } else if (currentStep === 'verify') {
+            // FIXED here: send token, not loginVerifyToken
             const verifyPayload = {
                 identifier: formData.identifier,
-                loginVerifyToken: formData.loginVerifyToken,
+                token: formData.loginVerifyToken,  // <-- changed key here to 'token'
             };
 
             console.log('DEBUG: Sending verification payload:', verifyPayload);
@@ -104,15 +104,15 @@ export default function CombinedLoginPage() {
 
     return (
         <div className={Styles.page}>
-        <form onSubmit={handleSubmit} className={Styles.form}>
+            <form onSubmit={handleSubmit} className={Styles.form}>
 
-            <div className={Styles.formHeader}>
-                    <div><h2 className={Styles.formTitle}>
-                        {currentStep === 'login' ? 'Login' : 'Verify Your Login'}
+                <div className={Styles.formHeader}>
+                    <div>
+                        <h2 className={Styles.formTitle}>
+                            {currentStep === 'login' ? 'Login' : 'Verify Your Login'}
+                        </h2>
 
-                    </h2>
-
-                                {currentStep === 'verify' && (
+                        {currentStep === 'verify' && (
                             <p>A verification code has been sent to your email. Enter it below.</p>
                         )}
 
@@ -121,7 +121,7 @@ export default function CombinedLoginPage() {
                                 {message}
                             </div>
                         )}
-                        </div>
+                    </div>
                     <div className={Styles.headerButton}>
                         <Button
                             variant='icon'
@@ -132,92 +132,87 @@ export default function CombinedLoginPage() {
                     </div>
                 </div>
 
+                {currentStep === 'login' && (
+                    <div className={Styles.inputGroup}>
+                        <Input
+                            label="Email or Username"
+                            showIcon
+                            icon="User"
+                            type="text"
+                            placeholder="example@gmail.com"
+                            name="identifier"
+                            value={formData.identifier}
+                            onChange={handleChange}
+                        />
 
+                        <Input
+                            label="Password"
+                            showIcon
+                            icon="Lock"
+                            type="password"
+                            placeholder="Enter password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                        />
+                    </div>
+                )}
 
+                {currentStep === 'verify' && (
+                    <>
+                        <Input
+                            label="Identifier"
+                            type="text"
+                            name="identifier"
+                            value={formData.identifier}
+                            disabled
+                            showIcon
+                            icon="User"
+                        />
 
+                        <VerificationCodeInput
+                            label="Verification Code *"
+                            value={formData.loginVerifyToken}
+                            onChange={(value) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    loginVerifyToken: value,
+                                }));
+                            }}
+                            length={6}
+                            autoFocus={true}
+                            helpText="Enter the 6-digit verification code"
+                        />
 
+                        <p>Didn&apos;t get the code? Try logging in again to resend.</p>
+                    </>
+                )}
 
-            {currentStep === 'login' && (
-                <div className={Styles.inputGroup}>
-                    <Input
-                        label="Email or Username"
+                <div className={Styles.formButtonContainer}>
+                    <Button
+                        variant="primary"
+                        type="submit"
+                        disabled={loading}
+                        label={
+                            loading
+                                ? currentStep === 'login'
+                                    ? 'Logging In...'
+                                    : 'Verifying...'
+                                : currentStep === 'login'
+                                    ? 'Login'
+                                    : 'Verify Code'
+                        }
                         showIcon
-                        icon="User"
-                        type="text"
-                        placeholder="example@gmail.com"
-                        name="identifier"
-                        value={formData.identifier}
-                        onChange={handleChange}
-                    />
-
-                    <Input
-                        label="Password"
-                        showIcon
-                        icon="Lock"
-                        type="password"
-                        placeholder="Enter password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
                     />
                 </div>
-            )}
 
-            {currentStep === 'verify' && (
-                <>
-                    <Input
-                        label="Identifier"
-                        type="text"
-                        name="identifier"
-                        value={formData.identifier}
-                        disabled
-                        showIcon
-                        icon="User"
-                    />
-
-                    <VerificationCodeInput
-                        label="Verification Code *"
-                        value={formData.loginVerifyToken}
-                        onChange={(value) => {
-                            setFormData(prev => ({
-                                ...prev,
-                                loginVerifyToken: value,
-                            }));
-                        }}
-                        length={6}
-                        autoFocus={true}
-                        helpText="Enter the 6-digit verification code"
-                    />
-
-                    <p>Didn&apos;t get the code? Try logging in again to resend.</p>
-                </>
-            )}
-
-            <div className={Styles.formButtonContainer}>
-                <Button
-                    variant="primary"
-                    type="submit"
-                    disabled={loading}
-                    label={
-                        loading
-                            ? currentStep === 'login'
-                                ? 'Logging In...'
-                                : 'Verifying...'
-                            : currentStep === 'login'
-                            ? 'Login'
-                            : 'Verify Code'
-                    }
-                    showIcon
-                />
-            </div>
-
-            {currentStep === 'login' && (
-                <div className={Styles.formFooter}>
-                    <p>Don&apos;t have an account?</p>
+                {currentStep === 'login' && (
+                    <div className={Styles.formFooter}>
+                        <p>Don&apos;t have an account?</p>
                         <Link className={Styles.link} href="/volunteer/register"><p>Register</p></Link>
-                </div>
-            )}
-        </form>
+                    </div>
+                )}
+            </form>
         </div>
     );
 }

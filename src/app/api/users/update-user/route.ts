@@ -1,9 +1,47 @@
 // app/api/users/update-user/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/config/connectDB"; // Adjust path as needed
-import User from "@/models/User"; // Adjust path as needed
-import { getDataFromToken } from "@/utils/getDataFromToken"; // Adjust path as needed
-import bcryptjs from "bcryptjs";
+import { connectDB } from "@/config/connectDB";
+import User from "@/models/User";
+import { getDataFromToken } from "@/utils/getDataFromToken";
+import bcrypt from "bcryptjs";
+
+
+
+const departments = [
+  "Administration", "Human Resources", "Finance & Accounting", 
+  "Project Operations & Management", "Outreach & Strategic Relations",
+  "Communications & Marketing", "Digital Operations",  
+  "Education & Youth Development"
+] as const;
+
+const teams = [
+  "Dhaka", "Faridpur", "Gazipur", "Gopalganj", "Kishoreganj", "Madaripur",
+  "Manikganj", "Munshiganj", "Narayanganj", "Narsingdi", "Rajbari", "Shariatpur", "Tangail",
+  "Bandarban", "Brahmanbaria", "Chandpur", "Chattogram", "Cumilla", "Cox's Bazar",
+  "Feni", "Khagrachari", "Lakshmipur", "Noakhali", "Rangamati",
+  "Bogura", "Chapainawabganj", "Joypurhat", "Naogaon", "Natore",
+  "Pabna", "Rajshahi", "Sirajganj",
+  "Bagerhat", "Chuadanga", "Jashore", "Jhenaidah", "Khulna",
+  "Kushtia", "Magura", "Meherpur", "Narail", "Satkhira",
+  "Barishal", "Barguna", "Bhola", "Jhalokathi", "Patuakhali", "Pirojpur",
+  "Habiganj", "Moulvibazar", "Sunamganj", "Sylhet",
+  "Jamalpur", "Mymensingh", "Netrokona", "Sherpur",
+  "Dinajpur", "Gaibandha", "Kurigram", "Lalmonirhat", "Nilphamari",
+  "Panchagarh", "Rangpur", "Thakurgaon"
+] as const;
+
+const combinedOrganisationTeamDept = [...departments, ...teams] as const;
+
+type OrganisationName = typeof combinedOrganisationTeamDept[number];
+
+interface SocialMedia {
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  instagram?: string;
+  github?: string;
+  website?: string;
+}
 
 interface UpdateData {
     firstName?: string;
@@ -13,152 +51,276 @@ interface UpdateData {
     email?: string;
     password?: string;
     phoneNumber?: string;
-    dateOfBirth?: Date;
-    gender?: string;
+    dateOfBirth?: string | Date;
+    gender?: "male" | "female" | "other";
     avatar?: string;
+    biography?: string;
     institution?: string;
-    educationLevel?: string;
+    educationLevel?: "SSC/O-Level" | "HSC/A-Level" | "Undergrad";
     address?: string;
-    location?: string;
-    teamName?: string;
-    teamRole?: string;
-    isDeptMember?: boolean;
-    department?: string;
+    organization?: {
+        type?: "team" | "department" | "none";
+        name?: OrganisationName; 
+        role?: string;
+    };
+    socialMedia?: SocialMedia;
 }
 
-interface ValidationError extends Error {
-    name: 'ValidationError';
-    errors: Record<string, { message: string }>;
+// Fields not allowed to be updated here
+const RESTRICTED_FIELDS = [
+  "isAdmin",
+  "isSuperAdmin",
+  "isVerified",
+  "dateJoined",
+  "forgotPasswordToken",
+  "forgotPasswordTokenExpiry",
+  "verificationToken",
+  "verificationTokenExpiry",
+];
+
+// Email validation regex
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
-/**
- * Handles user profile updates. Requires authentication.
- * Allows updating most user fields, handles password hashing if password is provided.
- * @param request The NextRequest object containing the update data.
- * @returns A NextResponse object indicating success or failure with the updated user data.
- */
+// Phone number validation regex
+function isValidPhoneNumber(phoneNumber: string): boolean {
+  return /^\+?[0-9\s\-]{7,15}$/.test(phoneNumber);
+}
+
+// Password validation: min 8 chars, at least one letter and one number
+function isValidPassword(password: string): boolean {
+  return (
+    password.length >= 8 &&
+    /[A-Za-z]/.test(password) &&
+    /\d/.test(password)
+  );
+}
+
 export async function PUT(request: NextRequest) {
-    try {
-        await connectDB(); // Connect to the database
+  try {
+    await connectDB();
 
-        // Get user ID from the token
-        const userId = getDataFromToken(request);
-
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized: No user ID found in token" }, { status: 401 });
-        }
-
-        const reqBody = await request.json();
-        const {
-            firstName,
-            lastName,
-            middleName,
-            username,
-            email,
-            password, // Handle password updates separately
-            phoneNumber,
-            dateOfBirth,
-            gender,
-            avatar,
-            institution,
-            educationLevel,
-            address,
-            location,
-            teamName,
-            teamRole,
-            isDeptMember,
-            department,
-            // isAdmin and isVerified should not be updated via this endpoint by a regular user
-        } = reqBody;
-
-        // Find the user to update
-        const user = await User.findById(userId);
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        // Prepare update object, handling specific fields
-        const updateData: UpdateData = {};
-
-        if (firstName !== undefined) updateData.firstName = firstName;
-        if (lastName !== undefined) updateData.lastName = lastName;
-        if (middleName !== undefined) updateData.middleName = middleName;
-        if (avatar !== undefined) updateData.avatar = avatar;
-        if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
-        if (gender !== undefined) updateData.gender = gender;
-        if (institution !== undefined) updateData.institution = institution;
-        if (educationLevel !== undefined) updateData.educationLevel = educationLevel;
-        if (address !== undefined) updateData.address = address;
-        if (location !== undefined) updateData.location = location;
-        if (teamName !== undefined) updateData.teamName = teamName;
-        if (teamRole !== undefined) updateData.teamRole = teamRole;
-        if (isDeptMember !== undefined) updateData.isDeptMember = isDeptMember;
-        if (department !== undefined) updateData.department = department;
-
-        // Handle unique fields (username, email, phoneNumber) with checks
-        if (username !== undefined && username.toLowerCase() !== user.username) {
-            const existingUser = await User.findOne({ username: username.toLowerCase() });
-            if (existingUser && existingUser._id.toString() !== userId) {
-                return NextResponse.json({ error: "Username already taken" }, { status: 400 });
-            }
-            updateData.username = username.toLowerCase();
-        }
-
-        if (email !== undefined && email.toLowerCase() !== user.email) {
-            const existingUser = await User.findOne({ email: email.toLowerCase() });
-            if (existingUser && existingUser._id.toString() !== userId) {
-                return NextResponse.json({ error: "Email already taken" }, { status: 400 });
-            }
-            updateData.email = email.toLowerCase();
-        }
-
-        if (phoneNumber !== undefined && phoneNumber !== user.phoneNumber) {
-            const existingUser = await User.findOne({ phoneNumber });
-            if (existingUser && existingUser._id.toString() !== userId) {
-                return NextResponse.json({ error: "Phone number already taken" }, { status: 400 });
-            }
-            // Validate phone number format
-            if (!/^\+?[0-9\s\-]{7,15}$/.test(phoneNumber)) {
-                return NextResponse.json({ error: "Please provide a valid phone number" }, { status: 400 });
-            }
-            updateData.phoneNumber = phoneNumber;
-        }
-
-        // Handle password update if provided
-        if (password !== undefined && password.length > 0) {
-            const salt = await bcryptjs.genSalt(10);
-            updateData.password = await bcryptjs.hash(password, salt);
-        }
-
-        // Perform the update
-        const updatedUser = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true, runValidators: true }).select("-password");
-
-        if (!updatedUser) {
-            return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
-        }
-
-        return NextResponse.json({
-            message: "User updated successfully",
-            success: true,
-            user: updatedUser,
-        }, { status: 200 });
-
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            console.error("Error during user update:", error.message);
-            // Handle Mongoose validation errors specifically
-            if (error.name === 'ValidationError') {
-                const validationError = error as ValidationError;
-                const errors: Record<string, string> = {};
-                for (const field in validationError.errors) {
-                    errors[field] = validationError.errors[field].message;
-                }
-                return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 });
-            }
-            return NextResponse.json({ error: error.message }, { status: 500 });
-        }
-        console.error("Unknown error during user update:", error);
-        return NextResponse.json({ error: "An unknown error occurred" }, { status: 500 });
+    const userId = getDataFromToken(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized: No user ID found in token" },
+        { status: 401 }
+      );
     }
+
+    const reqBody: UpdateData = await request.json();
+
+    // Remove restricted fields if present
+    RESTRICTED_FIELDS.forEach((field) => {
+      if (field in reqBody) {
+        delete reqBody[field as keyof UpdateData];
+      }
+    });
+
+    // Fetch the user
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const updateData: any = {};
+
+    // Validate and assign fields
+
+    if (reqBody.firstName !== undefined) {
+      if (typeof reqBody.firstName !== "string" || reqBody.firstName.trim() === "") {
+        return NextResponse.json(
+          { error: "First name must be a non-empty string" },
+          { status: 400 }
+        );
+      }
+      updateData.firstName = reqBody.firstName.trim();
+    }
+
+    if (reqBody.lastName !== undefined) {
+      if (typeof reqBody.lastName !== "string" || reqBody.lastName.trim() === "") {
+        return NextResponse.json(
+          { error: "Last name must be a non-empty string" },
+          { status: 400 }
+        );
+      }
+      updateData.lastName = reqBody.lastName.trim();
+    }
+
+    if (reqBody.middleName !== undefined) {
+      updateData.middleName = reqBody.middleName?.trim() || "";
+    }
+
+    if (reqBody.username !== undefined && reqBody.username.toLowerCase() !== user.username) {
+      if (typeof reqBody.username !== "string" || reqBody.username.trim().length < 3) {
+        return NextResponse.json(
+          { error: "Username must be at least 3 characters long" },
+          { status: 400 }
+        );
+      }
+      // Check uniqueness
+      const existingUser = await User.findOne({
+        username: reqBody.username.toLowerCase(),
+      });
+      if (existingUser && existingUser._id.toString() !== userId) {
+        return NextResponse.json({ error: "Username already taken" }, { status: 400 });
+      }
+      updateData.username = reqBody.username.toLowerCase().trim();
+    }
+
+    if (reqBody.email !== undefined && reqBody.email.toLowerCase() !== user.email) {
+      if (!isValidEmail(reqBody.email)) {
+        return NextResponse.json(
+          { error: "Please provide a valid email address" },
+          { status: 400 }
+        );
+      }
+      // Check uniqueness
+      const existingUser = await User.findOne({
+        email: reqBody.email.toLowerCase(),
+      });
+      if (existingUser && existingUser._id.toString() !== userId) {
+        return NextResponse.json({ error: "Email already taken" }, { status: 400 });
+      }
+      updateData.email = reqBody.email.toLowerCase().trim();
+    }
+
+    if (reqBody.password !== undefined) {
+      if (!isValidPassword(reqBody.password)) {
+        return NextResponse.json(
+          {
+            error:
+              "Password must be at least 8 characters long and contain at least one letter and one number",
+          },
+          { status: 400 }
+        );
+      }
+      // Hash password before updating
+      const hashedPassword = await bcrypt.hash(reqBody.password, 10);
+      updateData.password = hashedPassword;
+    }
+
+    if (reqBody.phoneNumber !== undefined) {
+      if (!isValidPhoneNumber(reqBody.phoneNumber)) {
+        return NextResponse.json(
+          { error: "Please provide a valid phone number" },
+          { status: 400 }
+        );
+      }
+      updateData.phoneNumber = reqBody.phoneNumber.trim();
+    }
+
+    if (reqBody.dateOfBirth !== undefined) {
+      const dob = new Date(reqBody.dateOfBirth);
+      if (isNaN(dob.getTime())) {
+        return NextResponse.json({ error: "Invalid date of birth" }, { status: 400 });
+      }
+      updateData.dateOfBirth = dob;
+    }
+
+    if (reqBody.gender !== undefined) {
+      if (!["male", "female", "other"].includes(reqBody.gender)) {
+        return NextResponse.json(
+          { error: "Gender must be 'male', 'female', or 'other'" },
+          { status: 400 }
+        );
+      }
+      updateData.gender = reqBody.gender;
+    }
+
+    if (reqBody.avatar !== undefined) {
+      updateData.avatar = reqBody.avatar?.trim() || "";
+    }
+
+    if (reqBody.biography !== undefined) {
+        updateData.biography = reqBody.biography?.trim() || " "
+    }
+
+    if (reqBody.institution !== undefined) {
+      if (typeof reqBody.institution !== "string") {
+        return NextResponse.json({ error: "Institution must be a string" }, { status: 400 });
+      }
+      updateData.institution = reqBody.institution.trim();
+    }
+
+    if (reqBody.educationLevel !== undefined) {
+      if (!["SSC/O-Level", "HSC/A-Level", "Undergrad"].includes(reqBody.educationLevel)) {
+        return NextResponse.json(
+          {
+            error:
+              "Education level must be one of 'SSC/O-Level', 'HSC/A-Level', or 'Undergrad'",
+          },
+          { status: 400 }
+        );
+      }
+      updateData.educationLevel = reqBody.educationLevel;
+    }
+
+    if (reqBody.address !== undefined) {
+      if (typeof reqBody.address !== "string") {
+        return NextResponse.json({ error: "Address must be a string" }, { status: 400 });
+      }
+      updateData.address = reqBody.address.trim();
+    }
+
+    // Organization object updates
+    if (reqBody.organization !== undefined) {
+      const org = reqBody.organization;
+      const orgUpdate: any = {};
+      if (org.type !== undefined) {
+        if (!["team", "department", "none"].includes(org.type)) {
+          return NextResponse.json(
+            { error: "Organization type must be 'team', 'department', or 'none'" },
+            { status: 400 }
+          );
+        }
+        orgUpdate.type = org.type;
+      }
+      if (org.name !== undefined) {
+        orgUpdate.name = typeof org.name === "string" ? org.name.trim() : "";
+      }
+      if (org.role !== undefined) {
+        orgUpdate.role = typeof org.role === "string" ? org.role.trim() : "";
+      }
+      updateData.organization = { ...user.organization?.toObject(), ...orgUpdate };
+    }
+
+    // Social Media updates
+    if (reqBody.socialMedia && typeof reqBody.socialMedia === "object") {
+      const allowedSocialFields = [
+        "facebook",
+        "twitter",
+        "linkedin",
+        "instagram",
+        "github",
+        "website",
+      ];
+
+      const socialUpdate: any = user.socialMedia
+        ? { ...user.socialMedia.toObject() }
+        : {};
+
+      for (const key of Object.keys(reqBody.socialMedia)) {
+        if (allowedSocialFields.includes(key)) {
+          const val = reqBody.socialMedia[key as keyof SocialMedia];
+          socialUpdate[key] = typeof val === "string" ? val.trim() : "";
+        }
+      }
+
+      updateData.socialMedia = socialUpdate;
+    }
+
+    // Update the user
+    await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+    return NextResponse.json({ message: "User updated successfully" }, { status: 200 });
+  } catch (error: any) {
+    console.error("Error updating user:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

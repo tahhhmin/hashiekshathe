@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Styles from './sheet.module.css';
 import Button from '@/ui/button/Button';
 import { X } from 'lucide-react';
@@ -17,12 +17,50 @@ interface SheetItem {
     path?: string;
 }
 
-export default function Sheet({
+export default function Sheet(
+    
+    
+    {
     menuName,
     footer,
     items = [],
     }: SheetProps) {
     const [open, setOpen] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+
+    useEffect(() => {
+            const checkAdminStatus = async () => {
+                try {
+                    const response = await fetch('/api/users/profile', {
+                        method: 'GET',
+                        credentials: 'include',
+                    });
+    
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        const user = responseData.data;
+                        
+                        setIsLoggedIn(true);
+                        setIsAdmin(user?.isAdmin || user?.isSuperAdmin || false);
+                    } else {
+                        setIsLoggedIn(false);
+                        setIsAdmin(false);
+                    }
+                } catch (error) {
+                    console.error('Error checking admin status:', error);
+                    setIsLoggedIn(false);
+                    setIsAdmin(false);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+    
+            checkAdminStatus();
+        }, []);
+
 
     return (
         <div>
@@ -49,6 +87,17 @@ export default function Sheet({
 
             {footer && (
             <div className={Styles.footer}>
+                {isLoggedIn && isAdmin && (
+                    <Link href='/dashboard' className={Styles.dashboardButton}>
+                        <Button
+                            variant='secondary'
+                            label='Dashboard'
+                            showIcon
+                            icon='Settings'
+                        />
+                    </Link>
+                )}
+
                 <Link href="/donate" className={Styles.footerButton1}><Button
                 variant="primary"
                 label="Donate"

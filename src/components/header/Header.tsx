@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Styles from './Header.module.css'
 
 import Image from 'next/image'
@@ -68,9 +68,46 @@ const navItems: NavItem[] = [
         { name: 'Collaborate', path: '/contact/collaborate', description: 'Let’s team up and create something meaningful together.' },
         ],
     },
+
+
+    
 ];
 
 export default function Header() {
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const checkAdminStatus = async () => {
+            try {
+                const response = await fetch('/api/users/profile', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    const user = responseData.data;
+                    
+                    setIsLoggedIn(true);
+                    setIsAdmin(user?.isAdmin || user?.isSuperAdmin || false);
+                } else {
+                    setIsLoggedIn(false);
+                    setIsAdmin(false);
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                setIsLoggedIn(false);
+                setIsAdmin(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        checkAdminStatus();
+    }, []);
+
     return (
         <header className={Styles.header}>
             <div className={Styles.logoContainer}>
@@ -91,15 +128,30 @@ export default function Header() {
             <div className={Styles.buttonContainer}>
                 <Link href='/donate' className={Styles.donateButton}>
                     <Button
-                    variant='primary'
-                    label='Donate'
-                /></Link>
+                        variant='primary'
+                        label='Donate'
+                    />
+                </Link>
+
+                {/* Admin Dashboard Button - Only show if user is logged in and is admin */}
+                {isLoggedIn && isAdmin && (
+                    <Link href='/dashboard' className={Styles.dashboardButton}>
+                        <Button
+                            variant='secondary'
+                            label='Dashboard'
+                            showIcon
+                            icon='Settings'
+                        />
+                    </Link>
+                )}
 
                 <div className={Styles.authButton}>
                     <AuthButton />
-                
                 </div>
-                <div className={Styles.themeToggleButton}><ThemeToggleButton /></div>
+                
+                <div className={Styles.themeToggleButton}>
+                    <ThemeToggleButton />
+                </div>
 
                 <div className={Styles.sheetMenuContainer}>
                     <Sheet menuName="Menu" footer items={navItems} />

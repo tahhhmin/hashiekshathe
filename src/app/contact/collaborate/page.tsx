@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, { useState } from 'react'
 import Styles from './page.module.css'
@@ -10,11 +10,22 @@ import VerificationCodeInput from '@/ui/input/VerificationCodeInput'
 
 export default function ContactPage() {
     const [formData, setFormData] = useState({
-        email: '',
-        subject: '',
-        message: ''
+        orgName: '',
+        orgType: '',
+        orgEmail: '',
+        orgWebsiteLink: '',
+        orgSocialLink: '',
+        orgAddress: '',
+        collaborationDescription: '',
+        proposedTimeline: '',
+        collaborationGoals: '',
+        senderName: '',
+        senderEmail: '',
+        senderContactNumber: '',
+        senderSocialLink: '',
+        senderPosition: ''
     });
-    
+
     const [verificationCode, setVerificationCode] = useState('');
     const [showVerification, setShowVerification] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -31,9 +42,17 @@ export default function ContactPage() {
 
     const handleSendVerificationCode = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
-        if (!formData.email || !formData.subject || !formData.message) {
-            setMessage('Please fill in all fields');
+
+        const requiredFields = [
+            'orgName', 'orgType', 'orgEmail', 'orgAddress',
+            'collaborationDescription', 'proposedTimeline', 'collaborationGoals',
+            'senderName', 'senderEmail', 'senderContactNumber', 'senderPosition'
+        ];
+
+        const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+
+        if (missingFields.length > 0) {
+            setMessage('Please fill in all required fields.');
             setMessageType('error');
             return;
         }
@@ -42,26 +61,24 @@ export default function ContactPage() {
         setMessage('');
 
         try {
-            const response = await fetch('/api/contact/inquiry/submit', {
+            const res = await fetch('/api/contact/collaborate/submit', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
+            const data = await res.json();
 
             if (data.success) {
                 setShowVerification(true);
-                setMessage(data.message);
+                setMessage(data.message || 'Verification code sent to your email.');
                 setMessageType('success');
             } else {
-                setMessage(data.message);
+                setMessage(data.message || 'Failed to submit collaboration request.');
                 setMessageType('error');
             }
-        } catch {
-            setMessage('Failed to send verification code. Please try again.');
+        } catch (err) {
+            setMessage('Something went wrong. Please try again.');
             setMessageType('error');
         } finally {
             setLoading(false);
@@ -70,9 +87,9 @@ export default function ContactPage() {
 
     const handleVerifyAndSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+
         if (!verificationCode) {
-            setMessage('Please enter the verification code');
+            setMessage('Please enter the verification code.');
             setMessageType('error');
             return;
         }
@@ -81,34 +98,45 @@ export default function ContactPage() {
         setMessage('');
 
         try {
-            const response = await fetch('/api/contact/inquiry/verify-submit', {
+            const res = await fetch('/api/contact/collaborate/verify-submit', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: formData.email,
-                    verificationCode: verificationCode
-                }),
+                    email: formData.senderEmail,
+                    verificationCode
+                })
             });
 
-            const data = await response.json();
+            const data = await res.json();
 
             if (data.success) {
-                setMessage(data.message);
+                setMessage(data.message || 'Collaboration request submitted successfully!');
                 setMessageType('success');
-                setFormData({ email: '', subject: '', message: '' });
+                setFormData({
+                    orgName: '',
+                    orgType: '',
+                    orgEmail: '',
+                    orgWebsiteLink: '',
+                    orgSocialLink: '',
+                    orgAddress: '',
+                    collaborationDescription: '',
+                    proposedTimeline: '',
+                    collaborationGoals: '',
+                    senderName: '',
+                    senderEmail: '',
+                    senderContactNumber: '',
+                    senderSocialLink: '',
+                    senderPosition: ''
+                });
                 setVerificationCode('');
                 setShowVerification(false);
             } else {
-                setMessage(data.message);
+                setMessage(data.message || 'Verification failed.');
                 setMessageType('error');
-                if (data.message.includes('expired')) {
-                    setShowVerification(false);
-                }
+                if (data.message.includes('expired')) setShowVerification(false);
             }
         } catch {
-            setMessage('Failed to verify code. Please try again.');
+            setMessage('Verification failed. Please try again.');
             setMessageType('error');
         } finally {
             setLoading(false);
@@ -128,9 +156,9 @@ export default function ContactPage() {
                 <div className={Styles.formContainer}>
                     <form className={Styles.form} onSubmit={showVerification ? handleVerifyAndSubmit : handleSendVerificationCode}>
                         <div className={Styles.formHeader}>
-                            <h2 className={Styles.formHeaderTitle}>Collaborate Message</h2>
+                            <h2 className={Styles.formHeaderTitle}>Collaboration Request</h2>
                             <h3 className={Styles.formHeaderSubtitle}>
-                                {showVerification ? 'Enter Verification Code' : 'Send us a message'}
+                                {showVerification ? 'Enter Verification Code' : 'Share your collaboration proposal'}
                             </h3>
                         </div>
 
@@ -142,50 +170,35 @@ export default function ContactPage() {
 
                         {!showVerification ? (
                             <div className={Styles.formInputs}>
-                                <Input
-                                    label='Email'
-                                    name='email'
-                                    showIcon
-                                    icon='Mail'
-                                    placeholder='e.g. sender@gmail.com'
-                                    type='email'
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    required
-                                />
+                                <h4>Organization Details</h4>
+                                <Input label="Organization Name" name="orgName" value={formData.orgName} onChange={handleInputChange} required />
+                                <Input label="Organization Type" name="orgType" value={formData.orgType} onChange={handleInputChange} required />
+                                <Input label="Organization Email" name="orgEmail" type="email" value={formData.orgEmail} onChange={handleInputChange} required />
+                                <Input label="Website Link" name="orgWebsiteLink" value={formData.orgWebsiteLink} onChange={handleInputChange} />
+                                <Input label="Social Media Link" name="orgSocialLink" value={formData.orgSocialLink} onChange={handleInputChange} />
+                                <Input label="Address" name="orgAddress" value={formData.orgAddress} onChange={handleInputChange} required />
+                                <Textarea label="Collaboration Description" name="collaborationDescription" value={formData.collaborationDescription} onChange={handleInputChange} required />
+                                <Input label="Proposed Timeline" name="proposedTimeline" value={formData.proposedTimeline} onChange={handleInputChange} required />
+                                <Textarea label="Collaboration Goals" name="collaborationGoals" value={formData.collaborationGoals} onChange={handleInputChange} required />
 
-                                <Input
-                                    label='Subject'
-                                    name='subject'
-                                    showIcon
-                                    icon='Type'
-                                    placeholder='e.g. Inquiry about services...'
-                                    type='text'
-                                    value={formData.subject}
-                                    onChange={handleInputChange}
-                                    required
-                                />
-
-                                <Textarea
-                                    label='Message'
-                                    name='message'
-                                    placeholder='Please describe your inquiry...'
-                                    value={formData.message}
-                                    onChange={handleInputChange}
-                                    required
-                                />
+                                <h4>Sender Information</h4>
+                                <Input label="Your Name" name="senderName" value={formData.senderName} onChange={handleInputChange} required />
+                                <Input label="Your Email" name="senderEmail" type="email" value={formData.senderEmail} onChange={handleInputChange} required />
+                                <Input label="Contact Number" name="senderContactNumber" value={formData.senderContactNumber} onChange={handleInputChange} required />
+                                <Input label="Social Media Link" name="senderSocialLink" value={formData.senderSocialLink} onChange={handleInputChange} />
+                                <Input label="Your Position" name="senderPosition" value={formData.senderPosition} onChange={handleInputChange} required />
                             </div>
                         ) : (
                             <div className={Styles.formInputs}>
                                 <VerificationCodeInput
-                                    label='Verification Code'
+                                    label="Verification Code"
                                     value={verificationCode}
-                                    onChange={(value: string) => setVerificationCode(value)}
+                                    onChange={setVerificationCode}
                                 />
                                 <div className={Styles.resendContainer}>
-                                    <span>Didn&rsquo;t receive the code? </span>
-                                    <button 
-                                        type="button" 
+                                    <span>Didn’t receive the code? </span>
+                                    <button
+                                        type="button"
                                         className={Styles.resendButton}
                                         onClick={handleResendCode}
                                         disabled={loading}
@@ -198,23 +211,23 @@ export default function ContactPage() {
 
                         <div className={Styles.formFooter}>
                             <Button
-                                variant='primary'
+                                variant="primary"
                                 label={
-                                    loading 
-                                        ? 'Processing...' 
-                                        : showVerification 
-                                            ? 'Submit Inquiry' 
+                                    loading
+                                        ? 'Processing...'
+                                        : showVerification
+                                            ? 'Submit Collaboration'
                                             : 'Send Verification Code'
                                 }
                                 showIcon
                                 disabled={loading}
                                 type="submit"
                             />
-                            
+
                             {showVerification && (
                                 <Button
-                                    variant='outlined'
-                                    label='Back to Form'
+                                    variant="outlined"
+                                    label="Back to Form"
                                     onClick={() => {
                                         setShowVerification(false);
                                         setVerificationCode('');
@@ -229,13 +242,13 @@ export default function ContactPage() {
 
                 <div className={Styles.sideContainer}>
                     <div className={Styles.sideContainerHeader}>
-                        <Mail className={Styles.sideContainerIcon}/> 
+                        <Mail className={Styles.sideContainerIcon} />
                         <h2>Mail us</h2>
                     </div>
                     <div className={Styles.sideContainerButtonContainer}>
                         <Button
-                            variant='outlined'
-                            label='Mail us Via Gmail'
+                            variant="outlined"
+                            label="Mail us via Gmail"
                             onClick={() => window.open('mailto:your-email@gmail.com', '_blank')}
                         />
                     </div>

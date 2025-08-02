@@ -1,26 +1,185 @@
 .container {
-    background-color: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 2rem;
-    width: 1000px;
-    height: fit-content;
+    width: 1440px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+/* LEFT TEXT */
+.heroTextContainer {
+    width: 50%;
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
-.title {
-    font-size: 72px;
-    font-weight: 900;
-    line-height: 1;
-}
-.subtitle {
-    font-size: 24px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--color-muted);
+/* RIGHT GRID */
+.heroImagesContainer {
+    width: 50%;
+    height: 70%;
 }
 
-.line1 {
-    color: var(--color-orange);
+
+.tag {
+    background-color: var(--color-orange);
+    width: fit-content;
+    color: var(--color-white);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 1.05rem;
+}
+.titleContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.subtitleContainer {
+    background-color: transparent;
+}
+.subtitle {
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--color-muted);
+}
+.buttonContainer {
+    display: flex;
+    gap: 1rem;
+}
+
+
+
+
+.parent {
+    display: grid;
+    height: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 0.5rem;
+}
+.parent div {
+    border-radius: 24px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Placeholder Blocks */
+.div1 {
+    grid-column: 1 / span 1;
+    grid-row: 1 / span 3;
+    background-color: var(--color-card);
+}
+
+.div2 {
+  grid-column: 1 / span 1;
+  grid-row: 4 / span 2;
+    background-color: var(--color-card);
+}
+
+.div3 {
+  grid-column: 2 / span 1;
+  grid-row: 1 / span 2;
+    background-color: var(--color-card);
+}
+
+.div4 {
+  grid-column: 2 / span 1;
+  grid-row: 3 / span 3;
+    background-color: var(--color-card);
+}
+
+.div5 {
+  grid-column: 3 / span 3;
+  grid-row: 2 / span 3;
+    background-color: var(--color-card);
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .container {
+        margin-top: 5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        text-align: center;
+    }
+
+    .tag {
+        margin: 0 auto;
+    }
+    .buttonContainer {
+        margin: 0 auto;
+    }
+    .heroTextContainer,
+    .heroImagesContainer {
+        width: 100%;
+    }
+
+    .title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .subtitle {
+        font-size: 1.25rem;
+        font-weight: 400;
+        line-height: 1.35;
+        color: var(--color-muted);
+    }
+
+    .heroTextContainer {
+        height: calc(100vh - 6rem) ;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+        .heroImagesContainer {
+        height: 400px;
+    }
+
+}
+
+
+.button {
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    height: fit-content;
+    border: 1px solid transparent;
+    transition: all 0.2s ease; /* fallback for var */
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    background-color: var(--color-orange);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--color-white);
+}
+.button:focus-visible {
+    outline: 2px solid var(--color-white);
+    outline-offset: 2px;
+}
+.button:hover {
+    box-shadow: 0 0 0 4px rgba(240, 86, 45, 0.6);
+}
+.icon {
+    color: var(--color-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }

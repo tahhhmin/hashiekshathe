@@ -1,290 +1,109 @@
-'use client';
+// src/app/signup/page.tsx
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Styles from './UserSignupForm.module.css';
-import Input from '@/ui/input/Input'; // Assuming you have an Input component
-import Button from '@/ui/button/Button'; // Assuming you have a Button component
+import { useState } from "react";
 
-// Define the structure for the form data
-type FormData = {
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  username: string;
-  email: string;
-  password: string;
-  phoneNumber: string;
-  dateOfBirth: string;
-  gender: string;
-  institution: string;
-  educationLevel: string;
-  address: string;
-  location: string;
-};
+export default function SignupPage() {
+    const [formData, setFormData] = useState({
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        username: "",
+        email: "",
+        password: "",
+        phoneNumber: "",
+        dateOfBirth: "",
+        gender: "",
+        institution: "",
+        educationLevel: "",
+        address: "",
+    });
 
-// Define props for pre-filling the form
-type Props = {
-  prefill?: Partial<FormData>; // Partial means all properties are optional
-};
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
 
-export default function UserSignupForm({ prefill }: Props) {
-  // Initialize form data with empty strings or pre-filled values if available
-  const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
-    middleName: '',
-    username: '',
-    email: '',
-    password: '',
-    phoneNumber: '',
-    dateOfBirth: '',
-    gender: '',
-    institution: '',
-    educationLevel: '',
-    address: '',
-    location: '',
-  });
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
 
-  const [loading, setLoading] = useState(false); // State for loading indicator during submission
-  const [message, setMessage] = useState(''); // State for success or error messages
-  const [isSuccess, setIsSuccess] = useState(false); // State to determine message styling
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage("");
 
-  // Effect to update form data when prefill prop changes
-  useEffect(() => {
-    if (prefill) {
-      setFormData((prev) => ({
-        ...prev, // Keep existing data
-        ...prefill, // Overlay with prefill data
-      }));
-    }
-  }, [prefill]); // Dependency array: run this effect when 'prefill' changes
-
-  // Handler for input changes, updates formData state
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value, // Update the specific field
-    }));
-  };
-
-  // Handler for form submission
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    setLoading(true); // Set loading to true
-    setMessage(''); // Clear previous messages
-    setIsSuccess(false); // Reset success status
-
-    try {
-      const response = await fetch('/api/users/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData), // Send form data as JSON
-      });
-
-      const data = await response.json(); // Parse JSON response
-
-      if (response.ok) {
-        setMessage(data.message || 'Signup successful!');
-        setIsSuccess(true);
-        // Clear the form after successful submission
-        setFormData({
-          firstName: '',
-          lastName: '',
-          middleName: '',
-          username: '',
-          email: '',
-          password: '',
-          phoneNumber: '',
-          dateOfBirth: '',
-          gender: '',
-          institution: '',
-          educationLevel: '',
-          address: '',
-          location: '',
+        try {
+        const res = await fetch("/api/users/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
         });
-      } else {
-        setMessage(data.error || 'Signup failed. Please try again.');
-        setIsSuccess(false);
-      }
-    } catch (error) {
-      console.error('Error during signup:', error);
-      setMessage('Unexpected error occurred.');
-    } finally {
-      setLoading(false); // Always reset loading state
-    }
-  };
 
-  return (
-    <form onSubmit={handleSubmit} className={Styles.form}>
-      <h2>Create a volunteer account</h2>
+        const data = await res.json();
+        if (res.ok) {
+            setMessage("✅ User created successfully!");
+            setFormData({
+            firstName: "",
+            middleName: "",
+            lastName: "",
+            username: "",
+            email: "",
+            password: "",
+            phoneNumber: "",
+            dateOfBirth: "",
+            gender: "",
+            institution: "",
+            educationLevel: "",
+            address: "",
+            });
+        } else {
+            setMessage(`❌ ${data.message}`);
+        }
+        } catch (error) {
+        console.error("Signup error:", error);
+        setMessage("❌ Something went wrong.");
+        } finally {
+        setLoading(false);
+        }
+    };
 
-      {message && (
-        <div className={isSuccess ? Styles.success : Styles.error}>
-          {message}
-        </div>
-      )}
+    return (
+        <main style={{ padding: "2rem" }}>
+        <h1>Signup Form</h1>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", maxWidth: "500px", gap: "0.5rem" }}>
+            <input name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} required />
+            <input name="middleName" placeholder="Middle Name (optional)" value={formData.middleName} onChange={handleChange} />
+            <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} required />
+            <input name="username" placeholder="Username" value={formData.username} onChange={handleChange} required />
+            <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+            <input name="password" type="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
+            <input name="phoneNumber" placeholder="Phone Number" value={formData.phoneNumber} onChange={handleChange} required />
+            <input name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
+            
+            <select name="gender" value={formData.gender} onChange={handleChange} required>
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
 
-      {/* Input Fields */}
-      <Input
-        type="text"
-        label="First Name"
-        name="firstName"
-        value={formData.firstName}
-        onChange={handleChange}
-        required
-        placeholder="First name"
-        showIcon
-        icon="User" // Assuming 'User' is a valid icon prop for your Input component
-      />
+            <input name="institution" placeholder="Institution" value={formData.institution} onChange={handleChange} required />
+            
+            <select name="educationLevel" value={formData.educationLevel} onChange={handleChange} required>
+                <option value="">Select Education Level</option>
+                <option value="Undergrad">Undergrad</option>
+                <option value="HSC/A-Level">HSC/A-Level</option>
+                <option value="SSC/O-Level">SSC/O-Level</option>
+            </select>
 
-      <Input
-        type="text"
-        label="Last Name"
-        name="lastName"
-        value={formData.lastName}
-        onChange={handleChange}
-        required
-        placeholder="Last name"
-        showIcon
-        icon="User"
-      />
+            <input name="address" placeholder="Address" value={formData.address} onChange={handleChange} required />
 
-      <Input
-        type="text"
-        label="Middle Name"
-        name="middleName"
-        value={formData.middleName}
-        onChange={handleChange}
-        placeholder="Middle name"
-        showIcon
-        icon="User"
-      />
+            <button type="submit" disabled={loading}>
+            {loading ? "Signing up..." : "Sign Up"}
+            </button>
+        </form>
 
-      <Input
-        label="Date of birth"
-        type="date"
-        placeholder="YYYY-MM-DD"
-        showIcon
-        icon="Calendar"
-        name="dateOfBirth"
-        value={formData.dateOfBirth}
-        onChange={handleChange}
-        required
-      />
-
-      {/* Gender Select Dropdown */}
-      <select
-        id="gender"
-        name="gender"
-        value={formData.gender}
-        onChange={handleChange}
-        required
-        className={Styles.select} // Apply custom styles if needed
-      >
-        <option value="">Select Gender</option>
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="other">Other</option>
-      </select>
-
-      <Input
-        label="Phone Number"
-        icon="Phone"
-        showIcon
-        placeholder="+880..."
-        type="tel"
-        name="phoneNumber"
-        value={formData.phoneNumber}
-        onChange={handleChange}
-        required
-      />
-
-      <Input
-        label="Username"
-        icon="AtSign"
-        type="text"
-        showIcon
-        placeholder="username"
-        name="username"
-        value={formData.username}
-        onChange={handleChange}
-        required
-      />
-
-      <Input
-        label="Email"
-        icon="Mail"
-        showIcon
-        placeholder="email@example.com"
-        type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-        required
-      />
-
-      <Input
-        label="Password"
-        icon="Lock"
-        showIcon
-        placeholder="Your password"
-        type="password"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        required
-      />
-
-      <Input
-        label="Institution"
-        icon="School"
-        showIcon
-        type="text"
-        name="institution"
-        value={formData.institution}
-        onChange={handleChange}
-      />
-
-      <Input
-        label="Education Level"
-        icon="Book"
-        showIcon
-        type="text"
-        name="educationLevel"
-        value={formData.educationLevel}
-        onChange={handleChange}
-      />
-
-      <Input
-        label="Address"
-        icon="MapPin"
-        showIcon
-        type="text"
-        name="address"
-        value={formData.address}
-        onChange={handleChange}
-      />
-
-      <Input
-        label="Location"
-        icon="Map"
-        showIcon
-        type="text"
-        name="location"
-        value={formData.location}
-        onChange={handleChange}
-      />
-
-      <Button
-        type="submit"
-        label={loading ? 'Submitting...' : 'Submit'}
-        disabled={loading} // Disable button when submitting
-      />
-    </form>
-  );
+        {message && <p style={{ marginTop: "1rem", color: message.startsWith("✅") ? "green" : "red" }}>{message}</p>}
+        </main>
+    );
 }
