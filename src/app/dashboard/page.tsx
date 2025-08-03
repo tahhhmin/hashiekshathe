@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Styles from './page.module.css';
 import Sidebar, { SidebarSection } from '@/ui/sidebar/Sidebar';
 import Button from '@/ui/button/Button';
-import Signup from '@/components/dashboard/volunteer/SignupTab';
+import Signup from '@/components/dashboard/volunteer/UserSignupForm';
 
 // Dummy components for demonstration – replace these with actual ones
 const AnnouncementList = () => <p>Announcement List Content</p>;
