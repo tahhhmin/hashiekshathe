@@ -5,9 +5,10 @@ import Project from '@/models/Project';
 
 export async function GET(
     request: Request,
-    { params }: { params: { slug: string } }
+    context: { params: Promise<{ slug: string }> }
 ) {
-    const { slug } = params;
+    // Await the params since they're now a Promise
+    const { slug } = await context.params;
     console.log(`--- API Route /api/projects/${slug} invoked ---`);
 
     if (!slug) {
@@ -32,7 +33,7 @@ export async function GET(
 
         console.log(`API Route: Successfully fetched project: ${project.name}`);
         return NextResponse.json(project, { status: 200 });
-    } catch (error: unknown) { // Changed 'any' to 'unknown'
+    } catch (error: unknown) {
         // Log the full error object to understand why it's null on the client
         console.error(`API Route ERROR: Unhandled exception fetching project "${slug}":`, error);
         console.error('Error type:', typeof error);
