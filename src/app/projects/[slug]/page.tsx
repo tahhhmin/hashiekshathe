@@ -57,9 +57,9 @@ interface Project {
     isPublic: boolean;
 }
 
-// Define the props for the dynamic page component
+// Updated props interface for Next.js 15
 interface ProjectProfilePageProps {
-    params: { slug: string };
+    params: Promise<{ slug: string }>; // params is now a Promise
 }
 
 // Define the type for the enriched volunteer data
@@ -69,7 +69,8 @@ interface EnrichedVolunteerDetail extends VolunteerDetail {
 }
 
 const ProjectProfilePage = async ({ params }: ProjectProfilePageProps) => {
-    const { slug } = params;
+    // Await the params in Next.js 15
+    const { slug } = await params;
 
     let project: Project | null = null;
     let error: string | null = null;
@@ -144,8 +145,8 @@ const ProjectProfilePage = async ({ params }: ProjectProfilePageProps) => {
                         <Image
                             src={project.bannerURL}
                             alt={`${project.name} banner`}
-                            layout="fill"
-                            objectFit="cover"
+                            fill
+                            style={{ objectFit: 'cover' }}
                             className={styles.bannerImage}
                         />
                     </div>
