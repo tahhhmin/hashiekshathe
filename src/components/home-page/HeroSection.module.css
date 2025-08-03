@@ -152,6 +152,10 @@
 }
 
 
+
+
+
+
 .button {
     padding: 12px 20px;
     border-radius: 8px;
@@ -182,4 +186,22 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+
+
+
+@media (max-width: 768px) {
+    .container {
+        margin-top: 1rem;
+    }
+    .title {
+        font-size: 2rem;
+    }
+    .subtitle {
+        font-size: 1.25rem;
+    }
+    .button {
+        padding: 8px 16px;
+    }
 }
