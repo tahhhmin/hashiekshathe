@@ -279,8 +279,8 @@ export async function PUT(request: NextRequest) {
         orgUpdate.type = org.type;
       }
       if (org.name !== undefined) {
-        const combined = [...departments, ...teams];
-        if (!combined.includes(org.name as any)) {
+        const combined: readonly string[] = [...departments, ...teams];
+        if (!combined.includes(org.name)) {
             return NextResponse.json({ error: "Invalid organization name" }, { status: 400 });
         }
         orgUpdate.name = org.name;

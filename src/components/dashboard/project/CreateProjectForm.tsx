@@ -87,23 +87,82 @@ const CreateProjectForm: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showUserSearchModal, setShowUserSearchModal] = useState(false);
 
-  // Corrected handler to use a type assertion for keyof ProjectFormData
+  // Fixed handler with proper typing
   const handleInputChange = (field: keyof ProjectFormData | `location.${keyof LocationData}` | `impact.${keyof ImpactData}`, value: string | number | boolean) => {
     setFormData(prev => {
-      const updatedData = { ...prev };
       if (field.includes('.')) {
         const [parent, child] = field.split('.') as [keyof ProjectFormData, string];
-        // Ensure parent is a valid key for a nested object and child exists
-        if (parent === 'location' || parent === 'impact') {
-          // Asserting the nested object type for type safety
-          const nestedObj = updatedData[parent] as LocationData | ImpactData;
-          (nestedObj as any)[child] = value;
+        // Handle nested objects with proper typing
+        if (parent === 'location') {
+          if (child === 'city') {
+            return {
+              ...prev,
+              location: {
+                ...prev.location,
+                city: value as string
+              }
+            };
+          } else if (child === 'division') {
+            return {
+              ...prev,
+              location: {
+                ...prev.location,
+                division: value as string
+              }
+            };
+          }
+        } else if (parent === 'impact') {
+          if (child === 'peopleServed') {
+            return {
+              ...prev,
+              impact: {
+                ...prev.impact,
+                peopleServed: value as number
+              }
+            };
+          } else if (child === 'volunteersEngaged') {
+            return {
+              ...prev,
+              impact: {
+                ...prev.impact,
+                volunteersEngaged: value as number
+              }
+            };
+          } else if (child === 'materialsDistributed') {
+            return {
+              ...prev,
+              impact: {
+                ...prev.impact,
+                materialsDistributed: value as number
+              }
+            };
+          }
         }
       } else {
-        // Update top-level property with correct type
-        (updatedData as any)[field as keyof ProjectFormData] = value;
+        // Update top-level property with proper typing
+        if (field === 'name') {
+          return { ...prev, name: value as string };
+        } else if (field === 'startDate') {
+          return { ...prev, startDate: value as string };
+        } else if (field === 'endDate') {
+          return { ...prev, endDate: value as string };
+        } else if (field === 'description') {
+          return { ...prev, description: value as string };
+        } else if (field === 'thumbnailURL') {
+          return { ...prev, thumbnailURL: value as string };
+        } else if (field === 'bannerURL') {
+          return { ...prev, bannerURL: value as string };
+        } else if (field === 'gallerySpreadsheetURL') {
+          return { ...prev, gallerySpreadsheetURL: value as string };
+        } else if (field === 'financialRecordURL') {
+          return { ...prev, financialRecordURL: value as string };
+        } else if (field === 'status') {
+          return { ...prev, status: value as 'Upcoming' | 'Ongoing' | 'Completed' };
+        } else if (field === 'isPublic') {
+          return { ...prev, isPublic: value as boolean };
+        }
       }
-      return updatedData;
+      return prev;
     });
   };
 
