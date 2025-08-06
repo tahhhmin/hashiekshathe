@@ -8,6 +8,7 @@ import { connectDB } from '@/config/connectDB'; // Import connectDB
 import Project from '@/models/Project'; // Import Project model
 import User from '@/models/User'; // Import User model (assuming you have one)
 import { Types } from 'mongoose'; // Import Mongoose Types for ObjectId conversion
+import Badge from '@/ui/badge/Badge';
 
 // Define the VolunteerDetail type
 interface VolunteerDetail {
@@ -140,8 +141,8 @@ const ProjectProfilePage = async ({ params }: ProjectProfilePageProps) => {
     return (
         <section className='section'>
             <div className={styles.container}>
-                {project.bannerURL && (
-                    <div className={styles.bannerImageWrapper}>
+                <div className={styles.bannerImageWrapper}>
+                    {project.bannerURL && (
                         <Image
                             src={project.bannerURL}
                             alt={`${project.name} banner`}
@@ -149,84 +150,136 @@ const ProjectProfilePage = async ({ params }: ProjectProfilePageProps) => {
                             style={{ objectFit: 'cover' }}
                             className={styles.bannerImage}
                         />
+                    )}
+                </div>
+
+                <div className={styles.header}>
+                    <div className={styles.titleContainer}>
+                        <h1 className={styles.projectTitle}>{project.name}</h1>
+                        <div className={styles.tagsContainer}>
+                            {project.tags.map((tag, index) => (
+                                <Badge key={index}
+                                    variant="variable"
+                                    showIcon={true}
+                                    icon="Star"
+                                    label={tag}
+                                    bgcolor="#FFD700"
+                                />
+                            ))}
+                        </div>
+                    </div>
+                    <p className={styles.projectDescription}>{project.description}</p>
+                </div>
+
+
+                <div className={styles.infoWrapper}>
+                    <div className={styles.infoContainer}>
+                          <h3 className={`${styles.infoContainerTitle} ${styles.location}`}>Location</h3>
+                        <p className={styles.infoContainerText}>
+                            {project.location.city}, {project.location.division ? `${project.location.division}, ` : ''}{project.location.country}
+                        </p>
+                    </div>
+
+                    <div className={styles.infoContainer}>
+                        <h3 className={`${styles.infoContainerTitle} ${styles.startDate}`}>End Date</h3>
+                        
+                        
+                        
+                        <p className={styles.infoContainerText}>
+                            
+                            {new Date(project.startDate).toLocaleDateString()}
+                        </p>
+                    </div>
+
+                    <div className={styles.infoContainer}>
+                        <h3 className={`${styles.infoContainerTitle} ${styles.endDate}`}>End Date</h3>
+                        <p className={styles.infoContainerText}>
+                            end date
+                        </p>
+                    </div>
+
+                    <div className={styles.infoContainer}>
+                          <h3 className={`${styles.infoContainerTitle} ${styles.status}`}>Status</h3>
+                        <p className={styles.infoContainerText}>
+                            {project.status}
+                        </p>
+                    </div>
+
+
+                    <div className={styles.infoContainer}>
+                          <h3 className={`${styles.infoContainerTitle} ${styles.gallerySpreadsheetURL}`}>View Project Gallery</h3>
+                        <p className={styles.infoContainerText}>
+                            gallerySpreadsheetURL
+                        </p>
+                    </div>
+
+                    <div className={styles.infoContainer}>
+                          <h3 className={`${styles.infoContainerTitle} ${styles.financialRecordURL}`}>Financial Records</h3>
+                        <p className={styles.infoContainerText}>
+                            financialRecordURL
+                        </p>
+                    </div>
+
+
+                </div>
+
+                {project.impact && (
+                    <div className={styles.section}>
+                        <h2>Impact</h2>
+                        {project.impact.peopleServed && project.impact.peopleServed > 0 && <p>People Served: {project.impact.peopleServed}</p>}
+                        {project.impact.volunteersEngaged && project.impact.volunteersEngaged > 0 && <p>Volunteers Engaged: {project.impact.volunteersEngaged}</p>}
+                        {project.impact.materialsDistributed && project.impact.materialsDistributed > 0 && <p>Materials Distributed: {project.impact.materialsDistributed}</p>}
                     </div>
                 )}
 
-                <div className={styles.contentWrapper}>
-                    <h1 className={styles.projectTitle}>{project.name}</h1>
-                    <p className={styles.projectLocation}>
-                        Location: {project.location.city}, {project.location.division ? `${project.location.division}, ` : ''}{project.location.country}
-                    </p>
-                    <p className={styles.projectDate}>
-                        Start Date: {new Date(project.startDate).toLocaleDateString()}
-                    </p>
-                    <p className={styles.projectStatus}>
-                        Status: {project.status}
-                    </p>
-
-                    <div className={styles.tagsContainer}>
-                        {project.tags.map((tag, index) => (
-                            <span key={index} className={styles.tag}>
-                                {tag}
-                            </span>
-                        ))}
+                {volunteersWithUserDetails.length > 0 && (
+                    <div className={styles.section}>
+                        <h2>Volunteers</h2>
+                        <ul className={styles.list}>
+                            {volunteersWithUserDetails.map((volunteer, index) => (
+                                <li key={volunteer._id || index}>
+                                    <strong>{volunteer.userName}</strong> ({volunteer.userEmail}) - {volunteer.volunteeringHours} hours
+                                    {volunteer.impactDescription && ` - "${volunteer.impactDescription}"`}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
+                )}
 
-                    <p className={styles.projectDescription}>{project.description}</p>
-
-                    {project.impact && (
-                        <div className={styles.section}>
-                            <h2>Impact</h2>
-                            {project.impact.peopleServed && project.impact.peopleServed > 0 && <p>People Served: {project.impact.peopleServed}</p>}
-                            {project.impact.volunteersEngaged && project.impact.volunteersEngaged > 0 && <p>Volunteers Engaged: {project.impact.volunteersEngaged}</p>}
-                            {project.impact.materialsDistributed && project.impact.materialsDistributed > 0 && <p>Materials Distributed: {project.impact.materialsDistributed}</p>}
-                        </div>
-                    )}
-
-                    {volunteersWithUserDetails.length > 0 && (
-                        <div className={styles.section}>
-                            <h2>Volunteers</h2>
-                            <ul className={styles.list}>
-                                {volunteersWithUserDetails.map((volunteer, index) => (
-                                    <li key={volunteer._id || index}>
-                                        <strong>{volunteer.userName}</strong> ({volunteer.userEmail}) - {volunteer.volunteeringHours} hours
-                                        {volunteer.impactDescription && ` - "${volunteer.impactDescription}"`}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {project.collaborators && project.collaborators.length > 0 && (
-                        <div className={styles.section}>
-                            <h2>Collaborators</h2>
-                            <ul className={styles.list}>
-                                {project.collaborators.map((collaborator, index) => (
-                                    <li key={index}>
-                                        {collaborator.name}
-                                        {collaborator.website && ` - `}
-                                        {collaborator.website && <a href={collaborator.website} target="_blank" rel="noopener noreferrer">{collaborator.website}</a>}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {project.sponsors && project.sponsors.length > 0 && (
-                        <div className={styles.section}>
-                            <h2>Sponsors</h2>
-                            <ul className={styles.list}>
-                                {project.sponsors.map((sponsor, index) => (
-                                    <li key={index}>
-                                        {sponsor.name}
-                                        {sponsor.website && ` - `}
-                                        {sponsor.website && <a href={sponsor.website} target="_blank" rel="noopener noreferrer">{sponsor.website}</a>}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+                <div>
+                    social section
                 </div>
+ 
+                {project.collaborators && project.collaborators.length > 0 && (
+                    <div className={styles.section}>
+                        <h2>Collaborators</h2>
+                        <ul className={styles.list}>
+                            {project.collaborators.map((collaborator, index) => (
+                                <li key={index}>
+                                    {collaborator.name}
+                                    {collaborator.website && ` - `}
+                                    {collaborator.website && <a href={collaborator.website} target="_blank" rel="noopener noreferrer">{collaborator.website}</a>}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {project.sponsors && project.sponsors.length > 0 && (
+                    <div className={styles.section}>
+                        <h2>Sponsors</h2>
+                        <ul className={styles.list}>
+                            {project.sponsors.map((sponsor, index) => (
+                                <li key={index}>
+                                    {sponsor.name}
+                                    {sponsor.website && ` - `}
+                                    {sponsor.website && <a href={sponsor.website} target="_blank" rel="noopener noreferrer">{sponsor.website}</a>}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
             </div>
         </section>
     );

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import Input from '@/ui/input/Input';
 import LogoutButton from '../button/LogoutButton';
-import HorizontalDivider from '../../ui/dividers/HorizontalDivider';
+import HorizontalDivider from '../../ui/seperator/Seperator';
 
 interface SocialMedia {
     facebook?: string;

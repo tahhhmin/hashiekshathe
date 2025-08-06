@@ -79,30 +79,46 @@
     grid-column: 1 / span 1;
     grid-row: 1 / span 3;
     background-color: var(--color-card);
+    position: relative;
+    overflow: hidden;
 }
 
 .div2 {
   grid-column: 1 / span 1;
   grid-row: 4 / span 2;
-    background-color: var(--color-card);
+  background-color: var(--color-card);
+  position: relative;
+  overflow: hidden;
 }
 
 .div3 {
   grid-column: 2 / span 1;
   grid-row: 1 / span 2;
-    background-color: var(--color-card);
+  background-color: var(--color-card);
+  position: relative;
+  overflow: hidden;
 }
 
 .div4 {
   grid-column: 2 / span 1;
   grid-row: 3 / span 3;
-    background-color: var(--color-card);
+  background-color: var(--color-card);
+  position: relative;
+  overflow: hidden;
 }
 
 .div5 {
   grid-column: 3 / span 3;
   grid-row: 2 / span 3;
-    background-color: var(--color-card);
+  background-color: var(--color-card);
+  position: relative; /* Required for Next.js Image with fill prop */
+  overflow: hidden; /* Ensures image doesn't overflow the rounded corners */
+}
+
+/* Prevent image flash on load */
+.parent div img {
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 /* RESPONSIVE */

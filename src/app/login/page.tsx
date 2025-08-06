@@ -7,6 +7,7 @@ import Button from '@/ui/button/Button';
 import Input from '@/ui/input/Input';
 import VerificationCodeInput from '@/ui/input/VerificationCodeInput';
 import Link from 'next/link';
+import Alert from '@/ui/alert/Alert';
 
 export default function CombinedLoginPage() {
     const router = useRouter();
@@ -117,10 +118,12 @@ export default function CombinedLoginPage() {
                         )}
 
                         {message && (
-                            <div className={isSuccess ? Styles.successMsg : Styles.errorMsg}>
-                                {message}
-                            </div>
-                        )}
+    <Alert
+        title={message}
+        variant={isSuccess ? 'success' : 'danger'}
+        icon={isSuccess ? 'CheckCircle' : 'AlertTriangle'}
+    />
+)}
                     </div>
                     <div className={Styles.headerButton}>
                         <Button
@@ -171,7 +174,7 @@ export default function CombinedLoginPage() {
                         />
 
                         <VerificationCodeInput
-                            label="Verification Code *"
+                            label="Verification Code"
                             value={formData.loginVerifyToken}
                             onChange={(value) => {
                                 setFormData(prev => ({
@@ -190,17 +193,17 @@ export default function CombinedLoginPage() {
 
                 <div className={Styles.formButtonContainer}>
                     <Button
-                        variant="primary"
+                        variant={loading ? 'loading' : 'primary'}
                         type="submit"
                         disabled={loading}
                         label={
                             loading
-                                ? currentStep === 'login'
-                                    ? 'Logging In...'
-                                    : 'Verifying...'
-                                : currentStep === 'login'
-                                    ? 'Login'
-                                    : 'Verify Code'
+                            ? currentStep === 'login'
+                                ? 'Logging In...'
+                                : 'Verifying...'
+                            : currentStep === 'login'
+                                ? 'Login'
+                                : 'Verify Code'
                         }
                         showIcon
                     />

@@ -27,6 +27,12 @@ const nextConfig = {
                 port: '', // Optional: you can leave this as an empty string
                 pathname: '/file/d/**', // This is a good pattern for Google Drive files
             },
+
+            {
+        protocol: 'https',
+        hostname: 'drive.google.com',
+        pathname: '/uc/**',
+      },
       // Add any other domains where your actual image thumbnails will be hosted
       // For example, if you host on Cloudinary or Imgur:
       // {

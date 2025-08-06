@@ -120,7 +120,7 @@ export default function MembersPage() {
         <section className='section'>
             <div className={Styles.container}>
                 <div className={Styles.header}>
-                    <h1>Members ({users.length})</h1>
+                    <h1>Members</h1>
                     
                     <div className={Styles.filters}>
                         <select 
@@ -148,15 +148,6 @@ export default function MembersPage() {
                 <div className={Styles.departmentsList}>
                     {Object.entries(usersByDepartment).map(([department, deptUsers]) => (
                         <div key={department} className={Styles.departmentSection}>
-                            <div 
-                                className={Styles.departmentHeader}
-                                style={{ backgroundColor: getDepartmentColor(department) }}
-                            >
-                                <h2>{department}</h2>
-                                <span className={Styles.memberCount}>
-                                    {deptUsers.length} member{deptUsers.length !== 1 ? 's' : ''}
-                                </span>
-                            </div>
 
                             <div className={Styles.membersGrid}>
                                 {deptUsers.map((user) => (
@@ -177,48 +168,9 @@ export default function MembersPage() {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className={Styles.memberInfo}>
-                                                <h3>
-                                                    {user.firstName} {user.middleName} {user.lastName}
-                                                    {user.isDeptMember && (
-                                                        <span className={Styles.deptBadge}>DEPT</span>
-                                                    )}
-                                                </h3>
-                                                <p className={Styles.username}>@{user.username}</p>
-                                            </div>
                                         </div>
 
-                                        <div className={Styles.memberDetails}>
-                                            <div className={Styles.detailRow}>
-                                                <span className={Styles.label}>Email:</span>
-                                                <span>{user.email}</span>
-                                            </div>
-                                            <div className={Styles.detailRow}>
-                                                <span className={Styles.label}>Phone:</span>
-                                                <span>{user.phoneNumber}</span>
-                                            </div>
-                                            <div className={Styles.detailRow}>
-                                                <span className={Styles.label}>Institution:</span>
-                                                <span>{user.institution}</span>
-                                            </div>
-                                            <div className={Styles.detailRow}>
-                                                <span className={Styles.label}>Team:</span>
-                                                <span>{user.teamName} ({user.teamRole})</span>
-                                            </div>
-                                            <div className={Styles.detailRow}>
-                                                <span className={Styles.label}>Location:</span>
-                                                <span>{user.location}</span>
-                                            </div>
-                                            <div className={Styles.detailRow}>
-                                                <span className={Styles.label}>Joined:</span>
-                                                <span>{formatDate(user.dateJoined)}</span>
-                                            </div>
-                                            <div className={Styles.statusRow}>
-                                                <span className={`${Styles.status} ${user.isVerified ? Styles.verified : Styles.unverified}`}>
-                                                    {user.isVerified ? '✓ Verified' : '⚠ Unverified'}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        
                                     </div>
                                 ))}
                             </div>

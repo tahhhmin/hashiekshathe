@@ -9,27 +9,27 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { ChevronDown } from 'lucide-react';
 
 interface InputProps {
-  label?: string;
-  name?: string;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  required?: boolean;
-  disabled?: boolean;
-  type?:
-    | 'text'
-    | 'email'
-    | 'password'
-    | 'date'
-    | 'datetime-local'
-    | 'number'
-    | 'tel'
-    | 'url'
-    | 'search';
-  placeholder?: string;
-  showIcon?: boolean;
-  icon?: keyof typeof Icons; // icon name like 'User', 'Mail'
-  showHelpText?: boolean;
-  helpText?: string;
+    label?: string;
+    name?: string;
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    required?: boolean;
+    disabled?: boolean;
+    type?:
+        | 'text'
+        | 'email'
+        | 'password'
+        | 'date'
+        | 'datetime-local'
+        | 'number'
+        | 'tel'
+        | 'url'
+        | 'search';
+    placeholder?: string;
+    showIcon?: boolean;
+    icon?: keyof typeof Icons; // icon name like 'User', 'Mail'
+    showHelpText?: boolean;
+    helpText?: string;
 }
 
 export default function Input({

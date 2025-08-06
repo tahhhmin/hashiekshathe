@@ -3,6 +3,7 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import Styles from './Button.module.css';
+import CircleLoader from '@/ui/Progress/CircleLoader';
 
 type ButtonVariant =
   | 'primary'
@@ -11,30 +12,33 @@ type ButtonVariant =
   | 'icon'
   | 'action'
   | 'danger'
-  | 'submit';
+  | 'submit'
+  | 'loading';
 
 interface ButtonProps {
   variant?: ButtonVariant;
   label?: string;
   showIcon?: boolean;
-  icon?: string; // Icon name as string
+  icon?: string;
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
   onClick?: () => void;
 }
 
 export default function Button({
-  variant = 'primary',
-  label,
-  showIcon,
-  icon,
-  type = 'button',
-  disabled = false,
-  onClick,
+    variant = 'primary',
+    label,
+    showIcon,
+    icon,
+    type = 'button',
+    disabled = false,
+    onClick,
 }: ButtonProps) {
+  const isLoading = variant === 'loading';
+
   const IconComponent = (icon && icon in LucideIcons
     ? LucideIcons[icon as keyof typeof LucideIcons]
-    : LucideIcons.CircleArrowRight) as React.ElementType;
+    : LucideIcons.ArrowUpRight) as React.ElementType;
 
   const buttonClassName = `${Styles.button} ${Styles[variant] || ''}`;
 
@@ -42,14 +46,18 @@ export default function Button({
     <button
       className={buttonClassName}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || isLoading}
       type={type}
       aria-label={!label && showIcon ? 'button icon' : label}
     >
-      {label && <span>{label}</span>}
-      {showIcon && IconComponent && (
-        <IconComponent className={Styles.buttonIcon} size={24} />
+      {showIcon && (
+        isLoading ? (
+          <CircleLoader size={18} color="#fff" backgroundColor="#888" thickness={2} />
+        ) : (
+          IconComponent && <IconComponent className={Styles.buttonIcon} size={24} />
+        )
       )}
+      {label && <span className={Styles.buttonLabel}>{label}</span>}
     </button>
   );
 }

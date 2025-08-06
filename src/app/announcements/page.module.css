@@ -7,7 +7,10 @@
     width: 100%;
 }
 
-
+.sectionLoading {
+    margin-top: 4.75rem;
+    margin-bottom: 100vh;
+}
 
 .announcementCard {
     padding: 1rem;

@@ -6,22 +6,33 @@ interface DonationRow {
   [key: string]: string;
 }
 
-export default function DonationTable() {
+interface DonationTableProps {
+  data?: DonationRow[];
+}
+
+export default function DonationTable({ data }: DonationTableProps) {
     const [rows, setRows] = useState<DonationRow[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        fetch('https://opensheet.vercel.app/1SIgCAMpZhHtNM3p0HgKjO3-9Lsk6KUiyc2Zn7Lya9qM/Sheet1')
-        .then((res) => res.json())
-        .then((data: DonationRow[]) => {
-            setRows([...data].reverse());
+        // If data is provided as props, use it instead of fetching
+        if (data) {
+            setRows(data);
             setLoading(false);
-        })
-        .catch((error) => {
-            console.error('Error fetching sheet data:', error);
-            setLoading(false);
-        });
-    }, []);
+        } else {
+            // Fallback to original fetching behavior
+            fetch('https://opensheet.vercel.app/1SIgCAMpZhHtNM3p0HgKjO3-9Lsk6KUiyc2Zn7Lya9qM/Sheet1')
+            .then((res) => res.json())
+            .then((fetchedData: DonationRow[]) => {
+                setRows([...fetchedData].reverse());
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error('Error fetching sheet data:', error);
+                setLoading(false);
+            });
+        }
+    }, [data]);
 
     if (loading) return <></>;
 
@@ -44,6 +55,11 @@ export default function DonationTable() {
                 ))}
                 </tbody>
             </table>
+            {rows.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                    No donations found matching your search criteria.
+                </div>
+            )}
         </div>
     );
 }

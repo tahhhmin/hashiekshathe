@@ -13,23 +13,23 @@ interface ButtonConfig {
 }
 
 interface StorycardProps {
-  icon?: string;
-  title?: string;
-  subtitle?: string;
-  text?: string[];
-  button1?: ButtonConfig;
-  button2?: ButtonConfig;
-  maxHeight?: number;
+    icon?: string;
+    title?: string;
+    subtitle?: string;
+    text?: string[];
+    button1?: ButtonConfig;
+    button2?: ButtonConfig;
+    maxHeight?: number;
 }
 
 export default function Storycard({
-  icon = 'UserSearch',
-  title = 'About Us',
-  subtitle = 'Subtitle',
-  text = ['Default paragraph text here.'],
-  button1 = { label: 'Show More', variant: 'primary' },
-  button2,
-  maxHeight = 200
+    icon = 'UserSearch',
+    title = 'About Us',
+    subtitle = 'Subtitle',
+    text = ['Default paragraph text here.'],
+    button1 = { label: 'Show More', variant: 'primary' },
+    button2,
+    maxHeight = 200
 }: StorycardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showExpandButton, setShowExpandButton] = useState(false);

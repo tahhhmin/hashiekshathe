@@ -1,0 +1,72 @@
+.container {
+    padding: 10rem 0rem;
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+} 
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;   
+    margin: 0 auto;
+    text-align: center;
+}
+.buttonsSpan {
+    display: flex;
+    gap: 1rem;
+    margin: 0 auto;
+}
+.buttonsSpan1 {
+    display: flex;
+    flex-direction: column;  
+    gap: 1rem;
+    width: 200px; 
+    margin: 0 auto;
+}
+.inputs, .seperator, .textarea, .progress, .AlertDialog {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 500px;
+}
+
+
+
+.seperatorContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+
+
+
+
+
+
+.cardAvatar {
+    display: inline-flex;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+.cardAvatarImage {
+    width: 50px;
+    height: 50px;
+    background-color: var(--color-card);
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+}
+.cardAvatarTexts {
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.cardAvatarName {
+    line-height: 1;
+}
+.cardAvatarMail {
+    color: var(--color-muted);
+    line-height: 1;
+}
