@@ -12,7 +12,7 @@ interface ExpenditureRow {
     [key: string]: string;
 }
 
-export default function page() {
+export default function Page() {
     // State for search filters
     const [searchTerm, setSearchTerm] = useState('')
     const [dateFilter, setDateFilter] = useState('')

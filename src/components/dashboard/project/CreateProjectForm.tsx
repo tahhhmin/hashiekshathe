@@ -348,7 +348,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Basic Information */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <FileText className={styles.icon} />
+            <FileText className={styles.icon} aria-hidden="true" />
             Basic Information
           </h2>
           <div className={styles.grid2Col}>
@@ -396,7 +396,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Location & Dates */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <MapPin className={styles.icon} />
+            <MapPin className={styles.icon} aria-hidden="true" />
             Location & Timeline
           </h2>
           <div className={styles.grid3Col}>
@@ -446,7 +446,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Tags */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <Tag className={styles.icon} />
+            <Tag className={styles.icon} aria-hidden="true" />
             Tags
           </h2>
           {formData.tags.map((tag, index) => (
@@ -464,8 +464,9 @@ const CreateProjectForm: React.FC = () => {
                   type="button"
                   onClick={() => removeArrayItem('tags', index)}
                   className={styles.removeButton}
+                  aria-label={`Remove tag ${index + 1}`}
                 >
-                  <Trash2 className={styles.iconSmall} />
+                  <Trash2 className={styles.iconSmall} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -475,7 +476,7 @@ const CreateProjectForm: React.FC = () => {
             onClick={() => addArrayItem('tags')}
             className={styles.addButton}
           >
-            <Plus className={styles.iconSmall} />
+            <Plus className={styles.iconSmall} aria-hidden="true" />
             Add Tag
           </button>
         </div>
@@ -483,7 +484,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Images & Files */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <Image className={styles.icon} />
+            <Image className={styles.icon} aria-hidden="true" />
             Media & Documents
           </h2>
           <div className={styles.spacingY4}>
@@ -537,7 +538,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Impact Metrics */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <Users className={styles.icon} />
+            <Users className={styles.icon} aria-hidden="true" />
             Impact Metrics
           </h2>
           <div className={styles.grid3Col}>
@@ -577,7 +578,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Volunteers */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <Users className={styles.icon} />
+            <Users className={styles.icon} aria-hidden="true" />
             Volunteers
           </h2>
           {formData.volunteers.map((volunteer, index) => (
@@ -590,8 +591,9 @@ const CreateProjectForm: React.FC = () => {
                   type="button"
                   onClick={() => removeVolunteer(index)}
                   className={styles.removeButton}
+                  aria-label={`Remove volunteer ${volunteer.volunteerEmail}`}
                 >
-                  <Trash2 className={styles.iconSmall} />
+                  <Trash2 className={styles.iconSmall} aria-hidden="true" />
                 </button>
               </div>
               <div className={styles.grid2Col}>
@@ -654,7 +656,7 @@ const CreateProjectForm: React.FC = () => {
             onClick={handleOpenUserSearchModal}
             className={styles.addButton}
           >
-            <Plus className={styles.iconSmall} />
+            <Plus className={styles.iconSmall} aria-hidden="true" />
             Add Volunteer from List
           </button>
         </div>
@@ -662,7 +664,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Collaborators */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <Building2 className={styles.icon} />
+            <Building2 className={styles.icon} aria-hidden="true" />
             Collaborators
           </h2>
           {formData.collaborators.map((collaborator, index) => (
@@ -673,8 +675,9 @@ const CreateProjectForm: React.FC = () => {
                   type="button"
                   onClick={() => removeCollaborator(index)}
                   className={styles.removeButton}
+                  aria-label={`Remove collaborator ${index + 1}`}
                 >
-                  <Trash2 className={styles.iconSmall} />
+                  <Trash2 className={styles.iconSmall} aria-hidden="true" />
                 </button>
               </div>
               <div className={styles.grid3Col}>
@@ -717,7 +720,7 @@ const CreateProjectForm: React.FC = () => {
             onClick={addCollaborator}
             className={styles.addButton}
           >
-            <Plus className={styles.iconSmall} />
+            <Plus className={styles.iconSmall} aria-hidden="true" />
             Add Collaborator
           </button>
         </div>
@@ -725,7 +728,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Sponsors */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <DollarSign className={styles.icon} />
+            <DollarSign className={styles.icon} aria-hidden="true" />
             Sponsors
           </h2>
           {formData.sponsors.map((sponsor, index) => (
@@ -736,8 +739,9 @@ const CreateProjectForm: React.FC = () => {
                   type="button"
                   onClick={() => removeSponsor(index)}
                   className={styles.removeButton}
+                  aria-label={`Remove sponsor ${index + 1}`}
                 >
-                  <Trash2 className={styles.iconSmall} />
+                  <Trash2 className={styles.iconSmall} aria-hidden="true" />
                 </button>
               </div>
               <div className={styles.grid3Col}>
@@ -780,7 +784,7 @@ const CreateProjectForm: React.FC = () => {
             onClick={addSponsor}
             className={styles.addButton}
           >
-            <Plus className={styles.iconSmall} />
+            <Plus className={styles.iconSmall} aria-hidden="true" />
             Add Sponsor
           </button>
         </div>
@@ -788,7 +792,7 @@ const CreateProjectForm: React.FC = () => {
         {/* Settings */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
-            <Globe className={styles.icon} />
+            <Globe className={styles.icon} aria-hidden="true" />
             Project Settings
           </h2>
           <div className={styles.toggleContainer}>
@@ -796,8 +800,9 @@ const CreateProjectForm: React.FC = () => {
               type="button"
               onClick={() => handleInputChange('isPublic', !formData.isPublic)}
               className={`${styles.toggleButton} ${formData.isPublic ? styles.togglePublic : styles.togglePrivate}`}
+              aria-label={`Toggle project visibility: currently ${formData.isPublic ? 'public' : 'private'}`}
             >
-              {formData.isPublic ? <Eye className={styles.iconSmall} /> : <EyeOff className={styles.iconSmall} />}
+              {formData.isPublic ? <Eye className={styles.iconSmall} aria-hidden="true" /> : <EyeOff className={styles.iconSmall} aria-hidden="true" />}
               {formData.isPublic ? 'Public Project' : 'Private Project'}
             </button>
             <p className={styles.toggleDescription}>
@@ -850,7 +855,7 @@ const CreateProjectForm: React.FC = () => {
               </>
             ) : (
               <>
-                <Plus className={styles.iconSmall} />
+                <Plus className={styles.iconSmall} aria-hidden="true" />
                 Create Project
               </>
             )}

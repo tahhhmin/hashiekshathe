@@ -14,10 +14,9 @@ export default function AlertDialog({
     return (
         <div className={Styles.container}>
             <div>
-                <h3 className={Styles.title}>Are you sure?</h3>
+                <h3 className={Styles.title}>{title}</h3>
                 <p className={Styles.description}>
-                    Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                    Sequi delectus necessitatibus maiores nihil voluptatum!
+                    {description}
                 </p>
             </div>
             <div className={Styles.buttonContainer}>

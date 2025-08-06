@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image'; // Import Next.js Image component
+import Image from 'next/image';
 import Styles from './page.module.css';
 
 interface User {
@@ -38,7 +38,6 @@ interface ApiResponse {
 }
 
 export default function MembersPage() {
-    const [users, setUsers] = useState<User[]>([]);
     const [usersByDepartment, setUsersByDepartment] = useState<Record<string, User[]>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -46,7 +45,6 @@ export default function MembersPage() {
     const [showDeptMembersOnly, setShowDeptMembersOnly] = useState(false);
     const [departments, setDepartments] = useState<string[]>([]);
 
-    // Memoize the fetchUsers function to prevent unnecessary re-renders of the useEffect hook.
     const fetchUsers = useCallback(async () => {
         try {
             setLoading(true);
@@ -60,7 +58,7 @@ export default function MembersPage() {
             const data: ApiResponse = await response.json();
 
             if (data.success) {
-                setUsers(data.data.users);
+                // Corrected: We only need usersByDepartment for this view
                 setUsersByDepartment(data.data.usersByDepartment);
                 setDepartments(data.data.departments);
             } else {
@@ -72,11 +70,11 @@ export default function MembersPage() {
         } finally {
             setLoading(false);
         }
-    }, [filterDepartment, showDeptMembersOnly]); // This is the complete dependency array
+    }, [filterDepartment, showDeptMembersOnly]);
 
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers]); // The dependency is now the memoized fetchUsers function
+    }, [fetchUsers]);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -121,10 +119,9 @@ export default function MembersPage() {
             <div className={Styles.container}>
                 <div className={Styles.header}>
                     <h1>Members</h1>
-                    
                     <div className={Styles.filters}>
-                        <select 
-                            value={filterDepartment} 
+                        <select
+                            value={filterDepartment}
                             onChange={(e) => setFilterDepartment(e.target.value)}
                             className={Styles.select}
                         >
@@ -148,10 +145,14 @@ export default function MembersPage() {
                 <div className={Styles.departmentsList}>
                     {Object.entries(usersByDepartment).map(([department, deptUsers]) => (
                         <div key={department} className={Styles.departmentSection}>
-
+                            <h2 className={Styles.departmentTitle}>{department}</h2>
                             <div className={Styles.membersGrid}>
                                 {deptUsers.map((user) => (
-                                    <div key={user._id} className={Styles.memberCard}>
+                                    <div
+                                        key={user._id}
+                                        className={Styles.memberCard}
+                                        style={{ backgroundColor: getDepartmentColor(user.department) }}
+                                    >
                                         <div className={Styles.memberHeader}>
                                             <div className={Styles.avatar}>
                                                 {user.avatar ? (
@@ -160,7 +161,7 @@ export default function MembersPage() {
                                                         alt={`${user.firstName} ${user.lastName}`}
                                                         width={64}
                                                         height={64}
-                                                        className={Styles.avatarImage} // Add a new class for styling the image
+                                                        className={Styles.avatarImage}
                                                     />
                                                 ) : (
                                                     <div className={Styles.avatarPlaceholder}>
@@ -169,8 +170,13 @@ export default function MembersPage() {
                                                 )}
                                             </div>
                                         </div>
-
-                                        
+                                        <div className={Styles.memberInfo}>
+                                            <h3 className={Styles.memberName}>
+                                                {user.firstName} {user.lastName}
+                                            </h3>
+                                            <p className={Styles.memberRole}>{user.teamRole}</p>
+                                            <p className={Styles.memberJoinDate}>Joined: {formatDate(user.dateJoined)}</p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
